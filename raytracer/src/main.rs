@@ -9,7 +9,7 @@ use vec3::{Vec3, Point3, Color};
 use crate::ray::{Ray, ray_color};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image2.jpg");
+    let path = std::path::Path::new("output/book1/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
