@@ -1,6 +1,6 @@
-use std::ops::{Add, Sub, Mul, Div};
-use std::ops::{Neg, AddAssign, SubAssign, MulAssign, DivAssign};
 use std::fmt;
+use std::ops::{Add, Div, Mul, Sub};
+use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vec3(pub f64, pub f64, pub f64);
@@ -31,7 +31,11 @@ impl Vec3 {
     }
 
     pub fn rgb(&self) -> [u8; 3] {
-        [(255.999 * self.0) as u8, (255.999 * self.1) as u8, (255.999 * self.2) as u8]
+        [
+            (255.999 * self.0) as u8,
+            (255.999 * self.1) as u8,
+            (255.999 * self.2) as u8,
+        ]
     }
 }
 
@@ -102,7 +106,7 @@ pub fn unit_vector(v: Vec3) -> Vec3 {
 // Type aliases for Vec3
 pub type Point3 = Vec3;
 // 3D point
-pub type Color = Vec3;   // RGB color
+pub type Color = Vec3; // RGB color
 
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

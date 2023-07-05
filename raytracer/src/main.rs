@@ -1,12 +1,12 @@
-pub mod vec3;
 pub mod ray;
+pub mod vec3;
 
+use crate::ray::{ray_color, Ray};
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use std::{fs::File, process::exit};
-use vec3::{Vec3, Point3, Color};
-use crate::ray::{Ray, ray_color};
+use vec3::{Color, Point3, Vec3};
 
 fn main() {
     let path = std::path::Path::new("output/book1/image4.jpg");
