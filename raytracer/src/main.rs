@@ -9,7 +9,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3, Vec3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image4.jpg");
+    let path = std::path::Path::new("output/book1/image5.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
