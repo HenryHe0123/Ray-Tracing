@@ -1,3 +1,4 @@
+use crate::rt_weekend::clamp;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
@@ -39,6 +40,18 @@ impl Vec3 {
             (255.999 * self.0) as u8,
             (255.999 * self.1) as u8,
             (255.999 * self.2) as u8,
+        ]
+    }
+
+    pub fn multi_samples_rgb(&self, samples: u32) -> [u8; 3] {
+        let scale = 1.0 / (samples as f64);
+        let r = scale * self.x();
+        let g = scale * self.y();
+        let b = scale * self.z();
+        [
+            (255.999 * clamp(r, 0.0, 0.999)) as u8,
+            (255.999 * clamp(g, 0.0, 0.999)) as u8,
+            (255.999 * clamp(b, 0.0, 0.999)) as u8,
         ]
     }
 }

@@ -53,7 +53,7 @@ This is probably your first time to use Rust, so there are some resources for yo
 
 - [Rust Programming Language](https://doc.rust-lang.org/book/title-page.html) which is the mostly used book for a beginner.
 - [Rust语言教程的中文版](https://kaisery.github.io/trpl-zh-cn/title-page.html)
-- [Rust 语言圣经](https://kaisery.github.io/trpl-zh-cn/title-page.html)
+- [Rust 语言圣经](https://course.rs/about-book.html)
 - [The Cargo Book](https://doc.rust-lang.org/cargo/index.html)
 - [Rust By Example](https://doc.rust-lang.org/rust-by-example/index.html)
 - [Rust Nomicon](https://doc.rust-lang.org/nomicon/index.html) which is for advanced users, e.g. you can learn how to write unsafe code in Rust.
