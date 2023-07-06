@@ -69,10 +69,11 @@ impl Vec3 {
         let r = scale * self.x();
         let g = scale * self.y();
         let b = scale * self.z();
+        //adding gamma-correct for gamma = 2
         [
-            (255.999 * clamp(r, 0.0, 0.999)) as u8,
-            (255.999 * clamp(g, 0.0, 0.999)) as u8,
-            (255.999 * clamp(b, 0.0, 0.999)) as u8,
+            (255.999 * clamp(r.sqrt(), 0.0, 0.999)) as u8,
+            (255.999 * clamp(g.sqrt(), 0.0, 0.999)) as u8,
+            (255.999 * clamp(b.sqrt(), 0.0, 0.999)) as u8,
         ]
     }
 }
