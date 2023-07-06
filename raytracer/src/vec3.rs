@@ -6,6 +6,10 @@ use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
+    pub fn default() -> Self {
+        Vec3(0.0, 0.0, 0.0)
+    }
+
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3(x, y, z)
     }

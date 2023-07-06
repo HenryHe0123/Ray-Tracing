@@ -1,10 +1,16 @@
+pub mod hittable;
 pub mod ray;
+pub mod rt_weekend;
+pub mod sphere;
 pub mod vec3;
 
+use crate::hittable::HittableList;
 use crate::ray::{ray_color, Ray};
+use crate::sphere::Sphere;
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use std::rc::Rc;
 use std::{fs::File, process::exit};
 use vec3::{Color, Point3, Vec3};
 
@@ -17,6 +23,11 @@ fn main() {
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
     let height = (width as f64 / aspect_ratio) as u32;
+
+    //world
+    let mut world = HittableList::new();
+    world.add(Rc::new(Sphere::new(&Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Rc::new(Sphere::new(&Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     //Camera
     let viewport_h = 2.0;
@@ -43,10 +54,10 @@ fn main() {
         for i in 0..width {
             let pixel = img.get_pixel_mut(i, j);
             let u = (i as f64) / ((width - 1) as f64);
-            let v = (j as f64) / ((height - 1) as f64);
+            let v = ((height - j - 1) as f64) / ((height - 1) as f64);
             let dir = lower_left_corner + u * horizontal + v * vertical - origin;
             let r = Ray::new(&origin, &dir);
-            let pixel_color: Color = ray_color(&r);
+            let pixel_color: Color = ray_color(&r, &world);
             *pixel = image::Rgb(pixel_color.rgb());
         }
         progress.inc(1);
