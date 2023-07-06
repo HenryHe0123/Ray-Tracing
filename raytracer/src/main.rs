@@ -18,7 +18,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image6.jpg");
+    let path = std::path::Path::new("output/book1/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -27,6 +27,7 @@ fn main() {
     let width = 400;
     let height = (width as f64 / aspect_ratio) as u32;
     let samples_per_pixel: u32 = 100;
+    let max_bounce_depth: i32 = 50;
 
     //World
     let mut world = HittableList::default();
@@ -54,7 +55,7 @@ fn main() {
                 let u = ((i as f64) + random_double()) / ((width - 1) as f64);
                 let v = (((height - j - 1) as f64) + random_double()) / ((height - 1) as f64);
                 let r = camera.get_ray(u, v);
-                pixel_color += ray_color(&r, &world);
+                pixel_color += ray_color(&r, &world, max_bounce_depth);
             }
             *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
         }

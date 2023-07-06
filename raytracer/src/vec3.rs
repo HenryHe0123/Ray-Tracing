@@ -1,4 +1,4 @@
-use crate::rt_weekend::clamp;
+use crate::rt_weekend::{clamp, random_double, random_double_range};
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
@@ -13,6 +13,27 @@ impl Vec3 {
 
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3(x, y, z)
+    }
+
+    pub fn random() -> Self {
+        Vec3(random_double(), random_double(), random_double())
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
+        Vec3(
+            random_double_range(min, max),
+            random_double_range(min, max),
+            random_double_range(min, max),
+        )
+    }
+
+    pub fn random_in_unit_sphere() -> Self {
+        loop {
+            let p = Vec3::random_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                break p;
+            }
+        }
     }
 
     pub fn x(&self) -> f64 {

@@ -29,10 +29,15 @@ impl Ray {
     }
 }
 
-pub fn ray_color(r: &Ray, world: &impl Hittable) -> Color {
+pub fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
+    if depth <= 0 {
+        //prevent endless recursion
+        return Color::default();
+    }
     let mut rec = HitRecord::new();
     if world.hit(r, 0.0, INFINITY, &mut rec) {
-        return 0.5 * (rec.normal + Color::new(1.0, 1.0, 1.0));
+        let new_dir = rec.normal + Vec3::random_in_unit_sphere();
+        return 0.5 * ray_color(&Ray::new(&rec.p, &new_dir), world, depth - 1);
     }
     let ud = unit_vector(r.direction());
     let t = 0.5 * (ud.y() + 1.0);
