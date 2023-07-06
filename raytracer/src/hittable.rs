@@ -31,6 +31,12 @@ impl HitRecord {
     }
 }
 
+impl Default for HitRecord {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub trait Hittable {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
 }
@@ -65,9 +71,15 @@ impl Hittable for HittableList {
             if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
+                *rec = temp_rec;
             }
         }
         hit_anything
+    }
+}
+
+impl Default for HittableList {
+    fn default() -> Self {
+        Self::new()
     }
 }
