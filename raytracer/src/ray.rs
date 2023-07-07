@@ -36,7 +36,8 @@ pub fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
     }
     let mut rec = HitRecord::new();
     if world.hit(r, 0.001, INFINITY, &mut rec) {
-        let new_dir = rec.normal + Vec3::random_unit_vector();
+        //let new_dir = rec.normal + Vec3::random_unit_vector();
+        let new_dir = Vec3::random_in_hemisphere(&rec.normal);
         return 0.5 * ray_color(&Ray::new(&rec.p, &new_dir), world, depth - 1);
     }
     let ud = unit_vector(r.direction());

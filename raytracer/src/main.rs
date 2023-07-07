@@ -18,7 +18,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image9.jpg");
+    let path = std::path::Path::new("output/book1/image10.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -58,8 +58,8 @@ fn main() {
                 pixel_color += ray_color(&r, &world, max_bounce_depth);
             }
             *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
+            progress.inc(1);
         }
-        progress.inc(1);
     }
     progress.finish();
 
