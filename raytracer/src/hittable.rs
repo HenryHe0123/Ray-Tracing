@@ -1,23 +1,26 @@
+use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 use std::rc::Rc;
 use std::vec::Vec;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Clone, Default)]
 pub struct HitRecord {
     pub p: Point3,        //hit point
     pub normal: Vec3,     //normal against ray direction
     pub t: f64,           //optical distance
     pub front_face: bool, //if ray hit to the front face
+    pub mat_ptr: Option<Rc<dyn Material>>,
 }
 
 impl HitRecord {
-    pub fn new() -> Self {
+    pub fn new(p_clone: Rc<dyn Material>) -> Self {
         HitRecord {
             p: Point3::default(),
             normal: Vec3::default(),
             t: 0.0,
             front_face: false,
+            mat_ptr: Some(p_clone),
         }
     }
 
@@ -28,12 +31,6 @@ impl HitRecord {
         } else {
             self.normal = -*outward_normal;
         }
-    }
-}
-
-impl Default for HitRecord {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -63,7 +60,7 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = HitRecord::new();
+        let mut temp_rec = rec.clone();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
@@ -71,7 +68,7 @@ impl Hittable for HittableList {
             if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec;
+                *rec = temp_rec.clone();
             }
         }
         hit_anything

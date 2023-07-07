@@ -2,7 +2,7 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::vec3::{unit_vector, Color, Point3, Vec3};
 use std::f64::INFINITY;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Default)]
 pub struct Ray {
     pub orig: Point3,
     pub dir: Vec3,
@@ -34,13 +34,18 @@ pub fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
         //prevent endless recursion
         return Color::default();
     }
-    let mut rec = HitRecord::new();
+    let mut rec = HitRecord::default();
     if world.hit(r, 0.001, INFINITY, &mut rec) {
-        //let new_dir = rec.normal + Vec3::random_unit_vector();
-        let new_dir = Vec3::random_in_hemisphere(&rec.normal);
-        return 0.5 * ray_color(&Ray::new(&rec.p, &new_dir), world, depth - 1);
+        let mut scattered = Ray::default();
+        let mut attenuation = Color::default();
+        if let Some(mat) = rec.mat_ptr.clone() {
+            if mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * ray_color(&scattered, world, depth - 1);
+            }
+        }
+        return Color::default();
     }
-    let ud = unit_vector(r.direction());
+    let ud = unit_vector(&r.direction());
     let t = 0.5 * (ud.y() + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }

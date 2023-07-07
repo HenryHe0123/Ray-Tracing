@@ -1,5 +1,6 @@
 pub mod camera;
 pub mod hittable;
+pub mod material;
 pub mod ray;
 pub mod rt_weekend;
 pub mod sphere;
@@ -7,6 +8,7 @@ pub mod vec3;
 
 use crate::camera::Camera;
 use crate::hittable::HittableList;
+use crate::material::{Lambertian, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::random_double;
 use crate::sphere::Sphere;
@@ -18,7 +20,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image10.jpg");
+    let path = std::path::Path::new("output/book1/image11.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -31,8 +33,30 @@ fn main() {
 
     //World
     let mut world = HittableList::default();
-    world.add(Rc::new(Sphere::new(&Point3::new(0.0, 0.0, -1.0), 0.5)));
-    world.add(Rc::new(Sphere::new(&Point3::new(0.0, -100.5, -1.0), 100.0)));
+    let material_ground = Rc::new(Lambertian::new(&Color::new(0.8, 0.8, 0.0)));
+    let material_center = Rc::new(Lambertian::new(&Color::new(0.7, 0.3, 0.3)));
+    let material_left = Rc::new(Metal::new(&Color::new(0.8, 0.8, 0.8)));
+    let material_right = Rc::new(Metal::new(&Color::new(0.8, 0.6, 0.2)));
+    world.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, -100.5, -1.0),
+        100.0,
+        material_ground,
+    )));
+    world.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, 0.0, -1.0),
+        0.5,
+        material_center,
+    )));
+    world.add(Rc::new(Sphere::new(
+        &Point3::new(-1.0, 0.0, -1.0),
+        0.5,
+        material_left,
+    )));
+    world.add(Rc::new(Sphere::new(
+        &Point3::new(1.0, 0.0, -1.0),
+        0.5,
+        material_right,
+    )));
 
     //Camera
     let camera = Camera::default();

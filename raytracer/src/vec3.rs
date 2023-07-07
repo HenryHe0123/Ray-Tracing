@@ -7,10 +7,6 @@ use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 pub struct Vec3(pub f64, pub f64, pub f64);
 
 impl Vec3 {
-    pub fn default() -> Self {
-        Vec3(0.0, 0.0, 0.0)
-    }
-
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vec3(x, y, z)
     }
@@ -37,7 +33,7 @@ impl Vec3 {
     }
 
     pub fn random_unit_vector() -> Self {
-        unit_vector(Vec3::random_in_unit_sphere())
+        unit_vector(&Vec3::random_in_unit_sphere())
     }
 
     pub fn random_in_hemisphere(normal: &Vec3) -> Self {
@@ -48,6 +44,10 @@ impl Vec3 {
         } else {
             -in_unit_sphere
         }
+    }
+
+    pub fn near_zero(&self) -> bool {
+        self.length_squared() < 1e-15
     }
 
     pub fn x(&self) -> f64 {
@@ -152,8 +152,13 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     )
 }
 
-pub fn unit_vector(v: Vec3) -> Vec3 {
-    v / v.length()
+pub fn unit_vector(v: &Vec3) -> Vec3 {
+    *v / v.length()
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    let n = unit_vector(n);
+    *v - 2.0 * dot(v, &n) * n
 }
 
 // Type aliases for Vec3
@@ -202,5 +207,11 @@ impl MulAssign<f64> for Vec3 {
 impl DivAssign<f64> for Vec3 {
     fn div_assign(&mut self, t: f64) {
         *self *= 1.0 / t;
+    }
+}
+
+impl Default for Vec3 {
+    fn default() -> Self {
+        Vec3(0.0, 0.0, 0.0)
     }
 }
