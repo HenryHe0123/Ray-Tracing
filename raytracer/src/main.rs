@@ -22,7 +22,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image19.jpg");
+    let path = std::path::Path::new("output/book1/image20.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -67,12 +67,20 @@ fn main() {
     )));
 
     //Camera
+    let lookfrom = Point3::new(3.0, 3.0, 2.0);
+    let lookat = Point3::new(0.0, 0.0, -1.0);
+    let vup = Vec3::new(0.0, 1.0, 0.0);
+    let dist_to_focus = (lookfrom - lookat).length();
+    let aperture = 2.0;
+
     let camera = Camera::new(
-        &Point3::new(-2.0, 2.0, 1.0),
-        &Point3::new(0.0, 0.0, -1.0),
-        &Vec3::new(0.0, 1.0, 0.0),
+        &lookfrom,
+        &lookat,
+        &vup,
         20.0,
         aspect_ratio,
+        aperture,
+        dist_to_focus,
     );
 
     //Render
