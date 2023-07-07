@@ -33,7 +33,7 @@ impl Vec3 {
     }
 
     pub fn random_unit_vector() -> Self {
-        unit_vector(&Vec3::random_in_unit_sphere())
+        Vec3::random_in_unit_sphere().unit()
     }
 
     pub fn random_in_hemisphere(normal: &Vec3) -> Self {
@@ -89,6 +89,10 @@ impl Vec3 {
             (255.999 * clamp(g.sqrt(), 0.0, 0.999)) as u8,
             (255.999 * clamp(b.sqrt(), 0.0, 0.999)) as u8,
         ]
+    }
+
+    pub fn unit(&self) -> Vec3 {
+        *self / self.length_squared()
     }
 }
 
@@ -152,12 +156,8 @@ pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
     )
 }
 
-pub fn unit_vector(v: &Vec3) -> Vec3 {
-    *v / v.length()
-}
-
 pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-    let n = unit_vector(n);
+    let n = n.unit();
     *v - 2.0 * dot(v, &n) * n
 }
 

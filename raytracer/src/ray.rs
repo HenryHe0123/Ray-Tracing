@@ -1,5 +1,5 @@
 use crate::hittable::{HitRecord, Hittable};
-use crate::vec3::{unit_vector, Color, Point3, Vec3};
+use crate::vec3::{Color, Point3, Vec3};
 use std::f64::INFINITY;
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -45,7 +45,7 @@ pub fn ray_color(r: &Ray, world: &impl Hittable, depth: i32) -> Color {
         }
         return Color::default();
     }
-    let ud = unit_vector(&r.direction());
+    let ud = r.direction().unit();
     let t = 0.5 * (ud.y() + 1.0);
     (1.0 - t) * Color::new(1.0, 1.0, 1.0) + t * Color::new(0.5, 0.7, 1.0)
 }

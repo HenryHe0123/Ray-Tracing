@@ -20,7 +20,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image11.jpg");
+    let path = std::path::Path::new("output/book1/image12.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -35,8 +35,8 @@ fn main() {
     let mut world = HittableList::default();
     let material_ground = Rc::new(Lambertian::new(&Color::new(0.8, 0.8, 0.0)));
     let material_center = Rc::new(Lambertian::new(&Color::new(0.7, 0.3, 0.3)));
-    let material_left = Rc::new(Metal::new(&Color::new(0.8, 0.8, 0.8)));
-    let material_right = Rc::new(Metal::new(&Color::new(0.8, 0.6, 0.2)));
+    let material_left = Rc::new(Metal::new(&Color::new(0.8, 0.8, 0.8), 0.3));
+    let material_right = Rc::new(Metal::new(&Color::new(0.8, 0.6, 0.2), 1.0));
     world.add(Rc::new(Sphere::new(
         &Point3::new(0.0, -100.5, -1.0),
         100.0,
