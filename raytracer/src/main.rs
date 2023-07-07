@@ -8,7 +8,7 @@ pub mod vec3;
 
 use crate::camera::Camera;
 use crate::hittable::HittableList;
-use crate::material::{Lambertian};
+use crate::material::Lambertian;
 use crate::ray::ray_color;
 use crate::rt_weekend::random_double;
 use crate::sphere::Sphere;
