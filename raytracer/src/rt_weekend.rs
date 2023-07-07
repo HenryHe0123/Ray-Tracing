@@ -15,10 +15,10 @@ pub fn random_double_range(min: f64, max: f64) -> f64 {
 
 pub fn clamp(x: f64, min: f64, max: f64) -> f64 {
     if x > max {
-        return max;
+        max
+    } else if x < min {
+        min
+    } else {
+        x
     }
-    if x < min {
-        return min;
-    }
-    x
 }

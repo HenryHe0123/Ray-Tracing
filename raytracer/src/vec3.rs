@@ -92,7 +92,7 @@ impl Vec3 {
     }
 
     pub fn unit(&self) -> Vec3 {
-        *self / self.length_squared()
+        *self / self.length()
     }
 }
 

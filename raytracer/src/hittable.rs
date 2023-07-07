@@ -26,11 +26,11 @@ impl HitRecord {
 
     pub fn set_face_normal(&mut self, r: &Ray, outward_normal: &Vec3) {
         self.front_face = dot(&r.dir, outward_normal) < 0.0;
-        if self.front_face {
-            self.normal = *outward_normal;
+        self.normal = if self.front_face {
+            *outward_normal
         } else {
-            self.normal = -*outward_normal;
-        }
+            -*outward_normal
+        };
     }
 }
 
@@ -38,6 +38,7 @@ pub trait Hittable {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
 }
 
+#[derive(Clone)]
 pub struct HittableList {
     pub objects: Vec<Rc<dyn Hittable>>,
 }
@@ -60,7 +61,7 @@ impl HittableList {
 
 impl Hittable for HittableList {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        let mut temp_rec = rec.clone();
+        let mut temp_rec = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 

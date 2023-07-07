@@ -20,7 +20,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image15.jpg");
+    let path = std::path::Path::new("output/book1/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -50,6 +50,11 @@ fn main() {
     world.add(Rc::new(Sphere::new(
         &Point3::new(-1.0, 0.0, -1.0),
         0.5,
+        material_left.clone(),
+    )));
+    world.add(Rc::new(Sphere::new(
+        &Point3::new(-1.0, 0.0, -1.0),
+        -0.4,
         material_left,
     )));
     world.add(Rc::new(Sphere::new(
