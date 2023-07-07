@@ -1,6 +1,6 @@
 use crate::hittable::HitRecord;
 use crate::ray::Ray;
-use crate::vec3::{dot, reflect, Color, Vec3};
+use crate::vec3::{dot, reflect, refract, Color, Vec3};
 
 pub trait Material {
     fn scatter(
@@ -64,10 +64,43 @@ impl Material for Metal {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool {
-        let scatter_dir = reflect(&r_in.direction().unit(), &rec.normal)
+        let reflected = reflect(&r_in.direction().unit(), &rec.normal)
             + self.fuzz * Vec3::random_in_unit_sphere();
         *attenuation = self.albedo;
-        *scattered = Ray::new(&rec.p, &scatter_dir);
-        dot(&scattered.direction(), &rec.normal) > 0.
+        *scattered = Ray::new(&rec.p, &reflected);
+        dot(&scattered.direction(), &rec.normal) > 0.0
+    }
+}
+
+#[derive(Debug, Copy, Clone, Default)]
+pub struct Dielectric {
+    pub ir: f64, //index of refraction
+}
+
+impl Dielectric {
+    pub fn new(index_of_refraction: f64) -> Self {
+        Dielectric {
+            ir: index_of_refraction,
+        }
+    }
+}
+
+impl Material for Dielectric {
+    fn scatter(
+        &self,
+        r_in: &Ray,
+        rec: &HitRecord,
+        attenuation: &mut Color,
+        scattered: &mut Ray,
+    ) -> bool {
+        *attenuation = Color::new(1.0, 1.0, 1.0);
+        let refraction_ratio = if rec.front_face {
+            1.0 / self.ir
+        } else {
+            self.ir
+        };
+        let refracted = refract(&r_in.direction().unit(), &rec.normal, refraction_ratio);
+        *scattered = Ray::new(&rec.p, &refracted);
+        true
     }
 }
