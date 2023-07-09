@@ -1,4 +1,5 @@
 use crate::ray::Ray;
+use crate::rt_weekend::random_double_range;
 use crate::vec3::{cross, Point3, Vec3};
 use std::f64;
 
@@ -51,11 +52,11 @@ impl Camera {
         }
     }
 
-    pub fn get_ray(&self, s: f64, t: f64) -> Ray {
+    pub fn get_ray(&self, s: f64, t: f64, time0: f64, time1: f64) -> Ray {
         let rd = self.lens_radius * Vec3::random_in_unit_disk();
         let offset = self.u * rd.x() + self.v * rd.y();
         let orig = self.origin + offset;
         let dir = self.lower_left_corner + s * self.horizontal + t * self.vertical - orig;
-        Ray::new(&orig, &dir)
+        Ray::new(&orig, &dir, random_double_range(time0, time1))
     }
 }

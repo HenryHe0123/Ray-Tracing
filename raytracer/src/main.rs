@@ -11,7 +11,7 @@ use crate::hittable::HittableList;
 use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
-use crate::sphere::Sphere;
+use crate::sphere::{MovingSphere, Sphere};
 use crate::vec3::Vec3;
 use console::style;
 use image::{ImageBuffer, RgbImage};
@@ -22,16 +22,16 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book1/image21.jpg");
+    let path = std::path::Path::new("output/book2/image1.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let aspect_ratio = 3.0 / 2.0;
-    let width = 1200;
-    let height = (width as f64 / aspect_ratio) as u32;
-    let samples_per_pixel: u32 = 500;
+    let aspect_ratio = 16.0 / 9.0;
+    let width = 400;
+    let samples_per_pixel: u32 = 100;
     let max_bounce_depth: i32 = 50;
+    let height = (width as f64 / aspect_ratio) as u32;
 
     //World
     let world = random_scene();
@@ -70,7 +70,7 @@ fn main() {
             for _s in 0..samples_per_pixel {
                 let u = ((i as f64) + random_double()) / ((width - 1) as f64);
                 let v = (((height - j - 1) as f64) + random_double()) / ((height - 1) as f64);
-                let r = camera.get_ray(u, v);
+                let r = camera.get_ray(u, v, 0.0, 1.0);
                 pixel_color += ray_color(&r, &world, max_bounce_depth);
             }
             *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
@@ -114,7 +114,16 @@ fn random_scene() -> HittableList {
                     // diffuse
                     let albedo = Color::random() * Color::random();
                     let sphere_material = Rc::new(Lambertian::new(&albedo));
-                    world.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
+                    let center2 = center + Vec3::new(0., random_double_range(0., 0.5), 0.);
+                    //world.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
+                    world.add(Rc::new(MovingSphere::new(
+                        &center,
+                        &center2,
+                        0.2,
+                        0.0,
+                        1.0,
+                        sphere_material,
+                    )));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_range(0.5, 1.0);
