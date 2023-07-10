@@ -27,7 +27,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image9.jpg");
+    let path = std::path::Path::new("output/book2/image10.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -220,7 +220,7 @@ fn two_spheres() -> HittableList {
 
 fn two_perlin_spheres() -> HittableList {
     let mut objects = HittableList::default();
-    let perlin_text = Rc::new(NoiseTexture::default()) as Rc<dyn Texture>;
+    let perlin_text = Rc::new(NoiseTexture::new(4.0)) as Rc<dyn Texture>;
     let material = Rc::new(Lambertian::new_from_ptr(&perlin_text));
     objects.add(Rc::new(Sphere::new(
         &Point3::new(0.0, -1000.0, 0.0),
