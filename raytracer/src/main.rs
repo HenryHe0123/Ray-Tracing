@@ -3,6 +3,7 @@ pub mod bvh;
 pub mod camera;
 pub mod hittable;
 pub mod material;
+pub mod perlin;
 pub mod ray;
 pub mod rt_weekend;
 pub mod sphere;
@@ -15,7 +16,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
-use crate::texture::{CheckerTexture, Texture};
+use crate::texture::{CheckerTexture, NoiseTexture, Texture};
 use crate::vec3::Vec3;
 use bvh::BVHNode;
 use console::style;
@@ -26,7 +27,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image3.jpg");
+    let path = std::path::Path::new("output/book2/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -41,8 +42,9 @@ fn main() {
     let world;
     let lookfrom;
     let lookat;
-    let aperture;
+    let mut aperture = 0.0;
     let vfov;
+    //let mut vfov = 40.0;
     let choice = 0;
 
     match choice {
@@ -53,12 +55,17 @@ fn main() {
             vfov = 20.0;
             aperture = 0.1;
         }
-        _other => {
+        2 => {
             world = two_spheres();
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
-            aperture = 0.0;
+        }
+        _other => {
+            world = two_perlin_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
         }
     }
 
@@ -207,6 +214,23 @@ fn two_spheres() -> HittableList {
         &Point3::new(0.0, 10.0, 0.0),
         10.0,
         material_checker,
+    )));
+    objects
+}
+
+fn two_perlin_spheres() -> HittableList {
+    let mut objects = HittableList::default();
+    let perlin_text = Rc::new(NoiseTexture::default()) as Rc<dyn Texture>;
+    let material = Rc::new(Lambertian::new_from_ptr(&perlin_text));
+    objects.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        material.clone(),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        material,
     )));
     objects
 }
