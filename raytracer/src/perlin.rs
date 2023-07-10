@@ -1,9 +1,9 @@
-use crate::rt_weekend::{random_double, random_int_range};
-use crate::vec3::Point3;
+use crate::rt_weekend::random_int_range;
+use crate::vec3::{dot, Point3, Vec3};
 
 #[derive(Clone)]
 pub struct Perlin {
-    ranfloat: Vec<f64>,
+    ran_vec: Vec<Vec3>,
     perm_x: Vec<i32>,
     perm_y: Vec<i32>,
     perm_z: Vec<i32>,
@@ -13,12 +13,12 @@ impl Perlin {
     const POINT_COUNT: usize = 256;
 
     pub fn new() -> Perlin {
-        let mut ranfloat = Vec::new();
+        let mut ran_vec = Vec::new();
         for _i in 0..Perlin::POINT_COUNT {
-            ranfloat.push(random_double());
+            ran_vec.push(Vec3::random_range(-1.0, 1.0).unit());
         }
         Perlin {
-            ranfloat,
+            ran_vec,
             perm_x: Perlin::perlin_generate_perm(),
             perm_y: Perlin::perlin_generate_perm(),
             perm_z: Perlin::perlin_generate_perm(),
@@ -36,12 +36,12 @@ impl Perlin {
         let i = p.x().floor() as i32;
         let j = p.y().floor() as i32;
         let k = p.z().floor() as i32;
-        let mut c: [[[f64; 2]; 2]; 2] = [[[0.0; 2]; 2]; 2];
+        let mut c: [[[Vec3; 2]; 2]; 2] = [[[Vec3::default(); 2]; 2]; 2];
 
         for (di, ci) in c.iter_mut().enumerate() {
             for (dj, cj) in ci.iter_mut().enumerate() {
                 for (dk, ck) in cj.iter_mut().enumerate() {
-                    *ck = self.ranfloat[(self.perm_x[((i + di as i32) & 255) as usize]
+                    *ck = self.ran_vec[(self.perm_x[((i + di as i32) & 255) as usize]
                         ^ self.perm_y[((j + dj as i32) & 255) as usize]
                         ^ self.perm_z[((k + dk as i32) & 255) as usize])
                         as usize];
@@ -68,15 +68,19 @@ impl Perlin {
         }
     }
 
-    fn trilinear_interp(c: &[[[f64; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+    fn trilinear_interp(c: &[[[Vec3; 2]; 2]; 2], u: f64, v: f64, w: f64) -> f64 {
+        let uu = u * u * (3.0 - 2.0 * u);
+        let vv = v * v * (3.0 - 2.0 * v);
+        let ww = w * w * (3.0 - 2.0 * w);
         let mut accum = 0.0;
         for (i, ci) in c.iter().enumerate() {
             for (j, cj) in ci.iter().enumerate() {
                 for (k, ck) in cj.iter().enumerate() {
-                    accum += ((i as f64) * u + ((1 - i) as f64) * (1.0 - u))
-                        * ((j as f64) * v + ((1 - j) as f64) * (1.0 - v))
-                        * ((k as f64) * w + ((1 - k) as f64) * (1.0 - w))
-                        * (*ck);
+                    let weight_v = Vec3::new(u - i as f64, v - j as f64, w - k as f64);
+                    accum += ((i as f64) * uu + ((1 - i) as f64) * (1.0 - uu))
+                        * ((j as f64) * vv + ((1 - j) as f64) * (1.0 - vv))
+                        * ((k as f64) * ww + ((1 - k) as f64) * (1.0 - ww))
+                        * dot(ck, &weight_v);
                 }
             }
         }
