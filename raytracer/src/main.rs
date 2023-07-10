@@ -26,7 +26,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image2.jpg");
+    let path = std::path::Path::new("output/book2/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -37,21 +37,39 @@ fn main() {
     let max_bounce_depth: i32 = 50;
     let height = (width as f64 / aspect_ratio) as u32;
 
-    //World
-    let world = random_scene();
+    //World & Camera
+    let world;
+    let lookfrom;
+    let lookat;
+    let aperture;
+    let vfov;
+    let choice = 0;
 
-    //Camera
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
+    match choice {
+        1 => {
+            world = random_scene();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.1;
+        }
+        _other => {
+            world = two_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+            aperture = 0.0;
+        }
+    }
+
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
-    let aperture = 0.1;
 
     let camera = Camera::new(
         &lookfrom,
         &lookat,
         &vup,
-        20.0,
+        vfov,
         aspect_ratio,
         aperture,
         dist_to_focus,
@@ -96,6 +114,8 @@ fn main() {
 
     exit(0);
 }
+
+//--------------------------------------------------------------------------------
 
 fn random_scene() -> HittableList {
     let mut world = HittableList::default();
@@ -169,4 +189,24 @@ fn random_scene() -> HittableList {
 
     world.add(Rc::new(BVHNode::new(&list, 0.0, 1.0)));
     world
+}
+
+fn two_spheres() -> HittableList {
+    let mut objects = HittableList::default();
+    let checker = Rc::new(CheckerTexture::new(
+        &Color::new(0.2, 0.3, 0.1),
+        &Color::new(0.9, 0.9, 0.9),
+    )) as Rc<dyn Texture>;
+    let material_checker = Rc::new(Lambertian::new_from_ptr(&checker));
+    objects.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, -10.0, 0.0),
+        10.0,
+        material_checker.clone(),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, 10.0, 0.0),
+        10.0,
+        material_checker,
+    )));
+    objects
 }
