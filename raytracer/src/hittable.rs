@@ -1,3 +1,4 @@
+use crate::aabb::{surrounding_box, AABB};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
@@ -36,6 +37,7 @@ impl HitRecord {
 
 pub trait Hittable {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
+    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool;
 }
 
 #[derive(Clone)]
@@ -73,6 +75,28 @@ impl Hittable for HittableList {
             }
         }
         hit_anything
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
+        if self.objects.is_empty() {
+            return false;
+        }
+
+        let mut tmp_box = AABB::default();
+        let mut first_box = true;
+
+        for object in &self.objects {
+            if !object.bounding_box(time0, time1, &mut tmp_box) {
+                return false;
+            }
+            *output_box = if first_box {
+                tmp_box
+            } else {
+                surrounding_box(output_box, &tmp_box)
+            };
+            first_box = false;
+        }
+        true
     }
 }
 

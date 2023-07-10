@@ -1,3 +1,5 @@
+pub mod aabb;
+pub mod bvh;
 pub mod camera;
 pub mod hittable;
 pub mod material;
@@ -13,16 +15,16 @@ use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
 use crate::vec3::Vec3;
+use bvh::BVHNode;
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
-//use std::f64::consts::PI;
 use std::rc::Rc;
 use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image1.jpg");
+    let path = std::path::Path::new("output/book2/image1-2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -95,12 +97,13 @@ fn main() {
 
 fn random_scene() -> HittableList {
     let mut world = HittableList::default();
+    let mut list = HittableList::default();
     let material_ground = Rc::new(Lambertian::new(&Color::new(0.5, 0.5, 0.5)));
     world.add(Rc::new(Sphere::new(
         &Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         material_ground,
-    )));
+    ))); //ground
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = random_double();
@@ -115,8 +118,8 @@ fn random_scene() -> HittableList {
                     let albedo = Color::random() * Color::random();
                     let sphere_material = Rc::new(Lambertian::new(&albedo));
                     let center2 = center + Vec3::new(0., random_double_range(0., 0.5), 0.);
-                    //world.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
-                    world.add(Rc::new(MovingSphere::new(
+                    //list.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
+                    list.add(Rc::new(MovingSphere::new(
                         &center,
                         &center2,
                         0.2,
@@ -129,33 +132,33 @@ fn random_scene() -> HittableList {
                     let albedo = Color::random_range(0.5, 1.0);
                     let fuzz = random_double_range(0.0, 0.5);
                     let sphere_material = Rc::new(Metal::new(&albedo, fuzz));
-                    world.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
+                    list.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
                 } else {
                     // glass
                     let sphere_material = Rc::new(Dielectric::new(1.5));
-                    world.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
+                    list.add(Rc::new(Sphere::new(&center, 0.2, sphere_material)));
                 }
             }
         }
     }
     let material1 = Rc::new(Dielectric::new(1.5));
-    world.add(Rc::new(Sphere::new(
+    list.add(Rc::new(Sphere::new(
         &Point3::new(0.0, 1.0, 0.0),
         1.0,
         material1,
     )));
     let material2 = Rc::new(Lambertian::new(&Color::new(0.4, 0.2, 0.1)));
-    world.add(Rc::new(Sphere::new(
+    list.add(Rc::new(Sphere::new(
         &Point3::new(-4.0, 1.0, 0.0),
         1.0,
         material2,
     )));
     let material3 = Rc::new(Metal::new(&Color::new(0.7, 0.6, 0.5), 0.0));
-    world.add(Rc::new(Sphere::new(
+    list.add(Rc::new(Sphere::new(
         &Point3::new(4.0, 1.0, 0.0),
         1.0,
         material3,
     )));
-
+    world.add(Rc::new(BVHNode::new(&list, 0.0, 1.0)));
     world
 }

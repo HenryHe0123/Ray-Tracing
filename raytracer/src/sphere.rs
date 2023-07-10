@@ -1,3 +1,4 @@
+use crate::aabb::{surrounding_box, AABB};
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
@@ -43,6 +44,11 @@ impl Hittable for Sphere {
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, &outward_normal);
         rec.mat_ptr = Some(Rc::clone(&self.mat_ptr));
+        true
+    }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
+        *output_box = AABB::center_radius_new(&self.center, self.radius);
         true
     }
 }
@@ -104,6 +110,13 @@ impl Hittable for MovingSphere {
         let outward_normal = (rec.p - self.center(r.time())) / self.radius;
         rec.set_face_normal(r, &outward_normal);
         rec.mat_ptr = Some(Rc::clone(&self.mat_ptr));
+        true
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
+        let box0 = AABB::center_radius_new(&(self.center(time0)), self.radius);
+        let box1 = AABB::center_radius_new(&(self.center(time1)), self.radius);
+        *output_box = surrounding_box(&box0, &box1);
         true
     }
 }
