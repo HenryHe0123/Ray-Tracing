@@ -52,6 +52,19 @@ impl Perlin {
         Perlin::trilinear_interp(&c, u, v, w)
     }
 
+    pub fn turbulence(&self, p: &Point3) -> f64 {
+        let depth = 7;
+        let mut accum = 0.0;
+        let mut temp_p = *p;
+        let mut weight = 1.0;
+        for _i in 0..depth {
+            accum += weight * self.noise(&temp_p);
+            weight *= 0.5;
+            temp_p *= 2.0;
+        }
+        accum.abs()
+    }
+
     fn perlin_generate_perm() -> Vec<i32> {
         let mut p = vec![0; Perlin::POINT_COUNT];
         for (i, it) in p.iter_mut().enumerate().take(Perlin::POINT_COUNT) {
