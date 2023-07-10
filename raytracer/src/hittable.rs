@@ -7,9 +7,11 @@ use std::vec::Vec;
 
 #[derive(Clone, Default)]
 pub struct HitRecord {
-    pub p: Point3,        //hit point
-    pub normal: Vec3,     //normal against ray direction
-    pub t: f64,           //optical distance
+    pub p: Point3,    //hit point
+    pub normal: Vec3, //normal against ray direction
+    pub t: f64,       //optical distance
+    pub u: f64,
+    pub v: f64,           //surface coordinates
     pub front_face: bool, //if ray hit to the front face
     pub mat_ptr: Option<Rc<dyn Material>>,
 }
@@ -20,6 +22,8 @@ impl HitRecord {
             p: Point3::default(),
             normal: Vec3::default(),
             t: 0.0,
+            u: 0.0,
+            v: 0.0,
             front_face: false,
             mat_ptr: Some(p_clone),
         }

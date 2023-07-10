@@ -6,6 +6,7 @@ pub mod material;
 pub mod ray;
 pub mod rt_weekend;
 pub mod sphere;
+pub mod texture;
 pub mod vec3;
 
 use crate::camera::Camera;
@@ -14,6 +15,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
+use crate::texture::{CheckerTexture, Texture};
 use crate::vec3::Vec3;
 use bvh::BVHNode;
 use console::style;
@@ -24,7 +26,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image1-2.jpg");
+    let path = std::path::Path::new("output/book2/image2.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -97,13 +99,18 @@ fn main() {
 
 fn random_scene() -> HittableList {
     let mut world = HittableList::default();
-    let mut list = HittableList::default();
-    let material_ground = Rc::new(Lambertian::new(&Color::new(0.5, 0.5, 0.5)));
+    let checker = Rc::new(CheckerTexture::new(
+        &Color::new(0.2, 0.3, 0.1),
+        &Color::new(0.9, 0.9, 0.9),
+    )) as Rc<dyn Texture>;
+    let material_ground = Rc::new(Lambertian::new_from_ptr(&checker));
     world.add(Rc::new(Sphere::new(
         &Point3::new(0.0, -1000.0, 0.0),
         1000.0,
         material_ground,
     ))); //ground
+
+    let mut list = HittableList::default();
     for a in -11..11 {
         for b in -11..11 {
             let choose_mat = random_double();
@@ -159,6 +166,7 @@ fn random_scene() -> HittableList {
         1.0,
         material3,
     )));
+
     world.add(Rc::new(BVHNode::new(&list, 0.0, 1.0)));
     world
 }
