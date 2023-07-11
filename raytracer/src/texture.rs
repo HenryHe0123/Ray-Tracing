@@ -1,5 +1,7 @@
 use crate::perlin::Perlin;
+use crate::rt_weekend::clamp;
 use crate::vec3::{Color, Point3};
+use image::GenericImageView;
 use std::rc::Rc;
 
 pub trait Texture {
@@ -84,5 +86,50 @@ impl NoiseTexture {
             noise: Perlin::default(),
             scale,
         }
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct ImageTexture {
+    data: Vec<u8>,
+    width: u32,
+    height: u32,
+    bytes_per_scanline: u32,
+}
+
+impl ImageTexture {
+    pub const BYTES_PER_PIXEL: u32 = 3;
+
+    pub fn new(pathname: &str) -> Self {
+        let img = image::open(pathname).expect("Fail to load image file.");
+        let data = img.to_rgb8().into_vec();
+        let (width, height) = img.dimensions();
+        Self {
+            data,
+            width,
+            height,
+            bytes_per_scanline: ImageTexture::BYTES_PER_PIXEL * width,
+        }
+    }
+}
+
+impl Texture for ImageTexture {
+    fn value(&self, u: f64, v: f64, _p: &Point3) -> Color {
+        // Clamp input texture coordinates to [0,1] x [1,0]
+        let u = clamp(u, 0.0, 1.0);
+        let v = 1.0 - clamp(v, 0.0, 1.0);
+        let mut i = (u * self.width as f64) as u32;
+        let mut j = (v * self.height as f64) as u32;
+        // Clamp integer mapping, since actual coordinates should be less than 1.0
+        i = i.min(self.width - 1);
+        j = j.min(self.height - 1);
+        let color_scale = 1.0 / 255.0;
+        let index = (j * self.bytes_per_scanline + i * ImageTexture::BYTES_PER_PIXEL) as usize;
+        color_scale
+            * Color::new(
+                self.data[index] as f64,
+                self.data[index + 1] as f64,
+                self.data[index + 2] as f64,
+            )
     }
 }

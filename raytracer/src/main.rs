@@ -16,7 +16,7 @@ use crate::material::{Dielectric, Lambertian, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
-use crate::texture::{CheckerTexture, NoiseTexture, Texture};
+use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, Texture};
 use crate::vec3::Vec3;
 use bvh::BVHNode;
 use console::style;
@@ -27,7 +27,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image13.jpg");
+    let path = std::path::Path::new("output/book2/image15.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -61,8 +61,14 @@ fn main() {
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
-        _other => {
+        3 => {
             world = two_perlin_spheres();
+            lookfrom = Point3::new(13.0, 2.0, 3.0);
+            lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        _other => {
+            world = earth();
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
@@ -233,4 +239,14 @@ fn two_perlin_spheres() -> HittableList {
         material,
     )));
     objects
+}
+
+fn earth() -> HittableList {
+    let earth_text =
+        Rc::new(ImageTexture::new("raytracer/sources/earthmap.jpg")) as Rc<dyn Texture>;
+    let earth_surface = Rc::new(Lambertian::new_from_ptr(&earth_text));
+    let globe = Rc::new(Sphere::new(&Point3::new(0.0, 0.0, 0.0), 2.0, earth_surface));
+    let mut world = HittableList::default();
+    world.add(globe);
+    world
 }
