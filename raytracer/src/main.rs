@@ -1,4 +1,5 @@
 pub mod aabb;
+pub mod aarect;
 pub mod bvh;
 pub mod camera;
 pub mod hittable;
@@ -10,9 +11,10 @@ pub mod sphere;
 pub mod texture;
 pub mod vec3;
 
+use crate::aarect::XYRect;
 use crate::camera::Camera;
 use crate::hittable::HittableList;
-use crate::material::{Dielectric, Lambertian, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
@@ -27,14 +29,14 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image15.jpg");
+    let path = std::path::Path::new("output/book2/image16.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
-    let samples_per_pixel: u32 = 100;
+    let mut samples_per_pixel: u32 = 100;
     let max_bounce_depth: i32 = 50;
     let height = (width as f64 / aspect_ratio) as u32;
 
@@ -45,6 +47,7 @@ fn main() {
     let mut aperture = 0.0;
     let vfov;
     //let mut vfov = 40.0;
+    let mut background = Color::new(0.7, 0.8, 1.0);
     let choice = 0;
 
     match choice {
@@ -67,10 +70,18 @@ fn main() {
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
-        _other => {
+        4 => {
             world = earth();
             lookfrom = Point3::new(13.0, 2.0, 3.0);
             lookat = Point3::new(0.0, 0.0, 0.0);
+            vfov = 20.0;
+        }
+        _other => {
+            world = simple_light();
+            samples_per_pixel = 400;
+            background = Color::default();
+            lookfrom = Point3::new(26.0, 3.0, 6.0);
+            lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
     }
@@ -106,7 +117,7 @@ fn main() {
                 let u = ((i as f64) + random_double()) / ((width - 1) as f64);
                 let v = (((height - j - 1) as f64) + random_double()) / ((height - 1) as f64);
                 let r = camera.get_ray(u, v, 0.0, 1.0);
-                pixel_color += ray_color(&r, &world, max_bounce_depth);
+                pixel_color += ray_color(&r, &background, &world, max_bounce_depth);
             }
             *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
             progress.inc(1);
@@ -249,4 +260,31 @@ fn earth() -> HittableList {
     let mut world = HittableList::default();
     world.add(globe);
     world
+}
+
+fn simple_light() -> HittableList {
+    let mut objects = HittableList::default();
+    let perlin_text = Rc::new(NoiseTexture::new(4.0)) as Rc<dyn Texture>;
+    let material = Rc::new(Lambertian::new_from_ptr(&perlin_text));
+    objects.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, -1000.0, 0.0),
+        1000.0,
+        material.clone(),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        &Point3::new(0.0, 2.0, 0.0),
+        2.0,
+        material,
+    )));
+
+    let diffuse_light = Rc::new(DiffuseLight::new(&Color::new(4.0, 4.0, 4.0))) as Rc<dyn Material>;
+    objects.add(Rc::new(XYRect::new(
+        3.0,
+        5.0,
+        1.0,
+        3.0,
+        -2.0,
+        &diffuse_light,
+    )));
+    objects
 }

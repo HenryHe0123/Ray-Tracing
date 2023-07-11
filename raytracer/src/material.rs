@@ -2,7 +2,7 @@ use crate::hittable::HitRecord;
 use crate::ray::Ray;
 use crate::rt_weekend::random_double;
 use crate::texture::{SolidColor, Texture};
-use crate::vec3::{dot, reflect, refract, Color, Vec3};
+use crate::vec3::{dot, reflect, refract, Color, Point3, Vec3};
 use std::rc::Rc;
 
 pub trait Material {
@@ -13,6 +13,10 @@ pub trait Material {
         attenuation: &mut Color,
         scattered: &mut Ray,
     ) -> bool;
+
+    fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+        Color::default()
+    }
 }
 
 #[derive(Clone, Default)]
@@ -134,4 +138,39 @@ fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
     // Use Schlick's approximation for reflectance.
     let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)).powi(2);
     r0 + (1.0 - r0) * ((1.0 - cosine).powi(5))
+}
+
+#[derive(Clone, Default)]
+pub struct DiffuseLight {
+    emit: Option<Rc<dyn Texture>>,
+}
+
+impl DiffuseLight {
+    pub fn new(c: &Color) -> Self {
+        Self {
+            emit: Some(Rc::new(SolidColor::new(c))),
+        }
+    }
+
+    pub fn new_from_ptr(a: &Rc<dyn Texture>) -> Self {
+        Self {
+            emit: Some(a.clone()),
+        }
+    }
+}
+
+impl Material for DiffuseLight {
+    fn scatter(
+        &self,
+        _r_in: &Ray,
+        _rec: &HitRecord,
+        _attenuation: &mut Color,
+        _scattered: &mut Ray,
+    ) -> bool {
+        false
+    }
+
+    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
+        self.emit.as_ref().unwrap().value(u, v, p)
+    }
 }
