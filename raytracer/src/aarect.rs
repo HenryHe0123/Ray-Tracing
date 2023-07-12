@@ -12,18 +12,18 @@ pub struct XYRect {
     x1: f64,
     y0: f64,
     y1: f64,
-    k: f64,
+    k: f64, //z = k
 }
 
 impl XYRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mat_ptr: &Rc<dyn Material>) -> Self {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, p_clone: Rc<dyn Material>) -> Self {
         Self {
             x0,
             x1,
             y0,
             y1,
             k,
-            mp: Some(mat_ptr.clone()),
+            mp: Some(p_clone),
         }
     }
 }
