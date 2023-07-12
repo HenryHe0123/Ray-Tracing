@@ -2,6 +2,7 @@ pub mod aabb;
 pub mod aarect;
 pub mod bvh;
 pub mod camera;
+pub mod constant_medium;
 pub mod hittable;
 pub mod material;
 pub mod mybox;
@@ -14,6 +15,7 @@ pub mod vec3;
 
 use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::camera::Camera;
+use crate::constant_medium::ConstantMedium;
 use crate::hittable::{HittableList, RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::mybox::MyBox;
@@ -31,7 +33,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image20.jpg");
+    let path = std::path::Path::new("output/book2/image21.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -85,8 +87,18 @@ fn main() {
             lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
-        _other => {
+        6 => {
             world = cornell_box();
+            aspect_ratio = 1.0;
+            width = 600;
+            samples_per_pixel = 200;
+            background = Color::default();
+            lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
+        _other => {
+            world = cornell_smoke();
             aspect_ratio = 1.0;
             width = 600;
             samples_per_pixel = 200;
@@ -348,5 +360,59 @@ fn cornell_box() -> HittableList {
     let box2 = Rc::new(Translate::new(box2, &Vec3::new(130., 0., 65.)));
     objects.add(box1);
     objects.add(box2);
+    objects
+}
+
+fn cornell_smoke() -> HittableList {
+    let mut objects = HittableList::default();
+    let red = Rc::new(Lambertian::new(&Color::new(0.65, 0.05, 0.05)));
+    let white = Rc::new(Lambertian::new(&Color::new(0.73, 0.73, 0.73)));
+    let green = Rc::new(Lambertian::new(&Color::new(0.12, 0.45, 0.15)));
+    let light = Rc::new(DiffuseLight::new(&Color::new(7.0, 7.0, 7.0)));
+    objects.add(Rc::new(YZRect::new(0., 555., 0., 555., 555., green)));
+    objects.add(Rc::new(YZRect::new(0., 555., 0., 555., 0., red)));
+    objects.add(Rc::new(XZRect::new(113., 343., 127., 432., 554., light)));
+    objects.add(Rc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
+    objects.add(Rc::new(XZRect::new(
+        0.,
+        555.,
+        0.,
+        555.,
+        555.,
+        white.clone(),
+    )));
+    objects.add(Rc::new(XYRect::new(
+        0.,
+        555.,
+        0.,
+        555.,
+        555.,
+        white.clone(),
+    )));
+
+    let box1 = Rc::new(MyBox::new(
+        &Point3::new(0., 0., 0.),
+        &Point3::new(165., 330., 165.),
+        white.clone(),
+    ));
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, &Vec3::new(265., 0., 295.)));
+    let box2 = Rc::new(MyBox::new(
+        &Point3::new(0., 0., 0.),
+        &Point3::new(165., 165., 165.),
+        white,
+    ));
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, &Vec3::new(130., 0., 65.)));
+    objects.add(Rc::new(ConstantMedium::new(
+        box1,
+        0.01,
+        &Color::new(0., 0., 0.),
+    )));
+    objects.add(Rc::new(ConstantMedium::new(
+        box2,
+        0.01,
+        &Color::new(1., 1., 1.),
+    )));
     objects
 }
