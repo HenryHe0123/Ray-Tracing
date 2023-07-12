@@ -84,6 +84,15 @@ impl Vec3 {
         }
     }
 
+    pub fn index_borrow(&mut self, i: u8) -> &mut f64 {
+        match i {
+            0 => &mut self.0,
+            1 => &mut self.1,
+            2 => &mut self.2,
+            _other => panic!("index out of bound!"),
+        }
+    }
+
     pub fn length(&self) -> f64 {
         self.length_squared().sqrt()
     }

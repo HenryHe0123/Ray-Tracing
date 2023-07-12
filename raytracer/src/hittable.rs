@@ -2,6 +2,7 @@ use crate::aabb::{surrounding_box, AABB};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
+use std::f64::INFINITY;
 use std::rc::Rc;
 use std::vec::Vec;
 
@@ -107,5 +108,141 @@ impl Hittable for HittableList {
 impl Default for HittableList {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct Translate {
+    pub ptr: Option<Rc<dyn Hittable>>,
+    pub offset: Vec3,
+}
+
+impl Hittable for Translate {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+        let moved_r = Ray::new(&(r.origin() - self.offset), &r.direction(), r.time());
+        if !self.ptr.as_ref().unwrap().hit(&moved_r, t_min, t_max, rec) {
+            return false;
+        }
+        rec.p += self.offset;
+        let normal = rec.normal;
+        rec.set_face_normal(&moved_r, &normal);
+        true
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
+        let mut temp_box = AABB::default();
+        if !self
+            .ptr
+            .as_ref()
+            .unwrap()
+            .bounding_box(time0, time1, &mut temp_box)
+        {
+            return false;
+        }
+        *output_box = AABB::new(
+            &(temp_box.min() + self.offset),
+            &(temp_box.max() + self.offset),
+        );
+        true
+    }
+}
+
+impl Translate {
+    pub fn new(p_clone: Rc<dyn Hittable>, displacement: &Vec3) -> Self {
+        Self {
+            ptr: Some(p_clone),
+            offset: *displacement,
+        }
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct RotateY {
+    pub ptr: Option<Rc<dyn Hittable>>,
+    pub sin_theta: f64,
+    pub cos_theta: f64,
+    pub hasbox: bool,
+    pub bbox: AABB,
+}
+
+impl Hittable for RotateY {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+        let mut origin = r.origin();
+        let mut direction = r.direction();
+
+        origin.0 = self.cos_theta * r.origin().0 - self.sin_theta * r.origin().2;
+        origin.2 = self.sin_theta * r.origin().0 + self.cos_theta * r.origin().2;
+
+        direction.0 = self.cos_theta * r.direction().0 - self.sin_theta * r.direction().2;
+        direction.2 = self.sin_theta * r.direction().0 + self.cos_theta * r.direction().2;
+
+        let rotated_r = Ray::new(&origin, &direction, r.time());
+
+        if !self
+            .ptr
+            .as_ref()
+            .unwrap()
+            .hit(&rotated_r, t_min, t_max, rec)
+        {
+            return false;
+        }
+
+        let mut p = rec.p;
+        let mut normal = rec.normal;
+
+        p.0 = self.cos_theta * rec.p.0 + self.sin_theta * rec.p.2;
+        p.2 = -self.sin_theta * rec.p.0 + self.cos_theta * rec.p.2;
+
+        normal.0 = self.cos_theta * rec.normal.0 + self.sin_theta * rec.normal.2;
+        normal.2 = -self.sin_theta * rec.normal.0 + self.cos_theta * rec.normal.2;
+
+        rec.p = p;
+        rec.set_face_normal(&rotated_r, &normal);
+
+        true
+    }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
+        *output_box = self.bbox;
+        self.hasbox
+    }
+}
+
+impl RotateY {
+    pub fn new(p_clone: Rc<dyn Hittable>, angle: f64) -> Self {
+        let radians = angle.to_radians();
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let mut bbox = AABB::default();
+        let hasbox = p_clone.bounding_box(0.0, 1.0, &mut bbox);
+        let mut min = Point3::new(INFINITY, INFINITY, INFINITY);
+        let mut max = Point3::new(-INFINITY, -INFINITY, -INFINITY);
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let i = i as f64;
+                    let j = j as f64;
+                    let k = k as f64;
+                    let x = i * bbox.max().x() + (1.0 - i) * bbox.min().x();
+                    let y = j * bbox.max().y() + (1.0 - j) * bbox.min().y();
+                    let z = k * bbox.max().z() + (1.0 - k) * bbox.min().z();
+                    let new_x = cos_theta * x + sin_theta * z;
+                    let new_z = -sin_theta * x + cos_theta * z;
+                    let tester = Vec3::new(new_x, y, new_z);
+                    for c in 0..3 {
+                        *min.index_borrow(c) = tester.index(c).min(min.index(c));
+                        *max.index_borrow(c) = tester.index(c).max(max.index(c));
+                    }
+                }
+            }
+        }
+        bbox = AABB::new(&min, &max);
+        Self {
+            ptr: Some(p_clone),
+            sin_theta,
+            cos_theta,
+            hasbox,
+            bbox,
+        }
     }
 }

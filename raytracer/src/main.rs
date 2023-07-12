@@ -14,7 +14,7 @@ pub mod vec3;
 
 use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::camera::Camera;
-use crate::hittable::HittableList;
+use crate::hittable::{HittableList, RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::mybox::MyBox;
 use crate::ray::ray_color;
@@ -31,7 +31,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image19.jpg");
+    let path = std::path::Path::new("output/book2/image20.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -332,15 +332,21 @@ fn cornell_box() -> HittableList {
         555.,
         white.clone(),
     )));
-    objects.add(Rc::new(MyBox::new(
-        &Point3::new(130., 0., 65.),
-        &Point3::new(295., 165., 230.),
+    let box1 = Rc::new(MyBox::new(
+        &Point3::new(0., 0., 0.),
+        &Point3::new(165., 330., 165.),
         white.clone(),
-    )));
-    objects.add(Rc::new(MyBox::new(
-        &Point3::new(265., 0., 295.),
-        &Point3::new(430., 330., 460.),
+    ));
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, &Vec3::new(265., 0., 295.)));
+    let box2 = Rc::new(MyBox::new(
+        &Point3::new(0., 0., 0.),
+        &Point3::new(165., 165., 165.),
         white,
-    )));
+    ));
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, &Vec3::new(130., 0., 65.)));
+    objects.add(box1);
+    objects.add(box2);
     objects
 }
