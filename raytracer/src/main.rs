@@ -11,10 +11,10 @@ pub mod sphere;
 pub mod texture;
 pub mod vec3;
 
-use crate::aarect::XYRect;
+use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::camera::Camera;
 use crate::hittable::HittableList;
-use crate::material::{Dielectric, DiffuseLight, Lambertian, Material, Metal};
+use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::ray::ray_color;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
@@ -29,16 +29,15 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image17.jpg");
+    let path = std::path::Path::new("output/book2/image18.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let aspect_ratio = 16.0 / 9.0;
-    let width = 400;
+    let mut aspect_ratio = 16.0 / 9.0;
+    let mut width = 400;
     let mut samples_per_pixel: u32 = 100;
     let max_bounce_depth: i32 = 50;
-    let height = (width as f64 / aspect_ratio) as u32;
 
     //World & Camera
     let world;
@@ -76,7 +75,7 @@ fn main() {
             lookat = Point3::new(0.0, 0.0, 0.0);
             vfov = 20.0;
         }
-        _other => {
+        5 => {
             world = simple_light();
             samples_per_pixel = 400;
             background = Color::default();
@@ -84,8 +83,19 @@ fn main() {
             lookat = Point3::new(0.0, 2.0, 0.0);
             vfov = 20.0;
         }
+        _other => {
+            world = cornell_box();
+            aspect_ratio = 1.0;
+            width = 600;
+            samples_per_pixel = 200;
+            background = Color::default();
+            lookfrom = Point3::new(278.0, 278.0, -800.0);
+            lookat = Point3::new(278.0, 278.0, 0.0);
+            vfov = 40.0;
+        }
     }
 
+    let height = (width as f64 / aspect_ratio) as u32;
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
 
@@ -277,7 +287,7 @@ fn simple_light() -> HittableList {
         material,
     )));
 
-    let diffuse_light = Rc::new(DiffuseLight::new(&Color::new(4.0, 4.0, 4.0))) as Rc<dyn Material>;
+    let diffuse_light = Rc::new(DiffuseLight::new(&Color::new(4.0, 4.0, 4.0)));
     objects.add(Rc::new(XYRect::new(
         3.0,
         5.0,
@@ -291,5 +301,27 @@ fn simple_light() -> HittableList {
         2.0,
         diffuse_light,
     )));
+    objects
+}
+
+fn cornell_box() -> HittableList {
+    let mut objects = HittableList::default();
+    let red = Rc::new(Lambertian::new(&Color::new(0.65, 0.05, 0.05)));
+    let white = Rc::new(Lambertian::new(&Color::new(0.73, 0.73, 0.73)));
+    let green = Rc::new(Lambertian::new(&Color::new(0.12, 0.45, 0.15)));
+    let light = Rc::new(DiffuseLight::new(&Color::new(15.0, 15.0, 15.0)));
+    objects.add(Rc::new(YZRect::new(0., 555., 0., 555., 555., green)));
+    objects.add(Rc::new(YZRect::new(0., 555., 0., 555., 0., red)));
+    objects.add(Rc::new(XZRect::new(213., 343., 227., 332., 554., light)));
+    objects.add(Rc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
+    objects.add(Rc::new(XZRect::new(
+        0.,
+        555.,
+        0.,
+        555.,
+        555.,
+        white.clone(),
+    )));
+    objects.add(Rc::new(XYRect::new(0., 555., 0., 555., 555., white)));
     objects
 }
