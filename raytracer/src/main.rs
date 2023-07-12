@@ -111,7 +111,7 @@ fn main() {
             world = final_scene();
             aspect_ratio = 1.0;
             width = 800;
-            samples_per_pixel = 5000;
+            samples_per_pixel = 2500;
             background = Color::default();
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
