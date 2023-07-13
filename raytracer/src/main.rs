@@ -135,11 +135,10 @@ fn main() {
 
     //Multi Threads
     let threads_number: usize = 3;
+    let shuffle: bool = true;
 
     let multi_progress = MultiProgress::new();
-
-    let pixels_per_thread = (width * height) as usize / threads_number;
-    let pixel_list = pixel_allocate(width, height, threads_number);
+    let (pixel_list, pixels_per_thread) = pixel_allocate(width, height, threads_number, shuffle);
     let mut threads = Vec::new();
     let mut recv = Vec::new();
 
@@ -152,7 +151,7 @@ fn main() {
         let world = Arc::clone(&world);
         let camera = camera;
         let pixels = pixels.clone();
-        let pb = multi_progress.add(ProgressBar::new(pixels_per_thread as u64));
+        let pb = multi_progress.add(ProgressBar::new(pixels_per_thread));
         pb.set_prefix(format!("Process {}", k));
         let handle = thread::spawn(move || {
             for pixel in pixels {
@@ -229,8 +228,17 @@ fn main() {
 
 //----------------------------------------------------------------------------------------------
 
-fn pixel_allocate(w: u32, h: u32, threads_num: usize) -> Vec<Vec<(u32, u32)>> {
-    let pixels_per_thread = (w * h) as usize / threads_num;
+fn pixel_allocate(
+    w: u32,
+    h: u32,
+    threads_num: usize,
+    shuffle: bool,
+) -> (Vec<Vec<(u32, u32)>>, u64) {
+    let mut pixels_per_thread = (w * h) as usize / threads_num;
+    if (w * h) as usize % threads_num > 0 {
+        pixels_per_thread += 1;
+    }
+
     let mut pixel_set = vec![Vec::new(); threads_num];
 
     let mut all_pixels = Vec::new();
@@ -239,11 +247,15 @@ fn pixel_allocate(w: u32, h: u32, threads_num: usize) -> Vec<Vec<(u32, u32)>> {
             all_pixels.push((i, j));
         }
     }
-    all_pixels.shuffle(&mut rand::thread_rng());
-    //allocate shuffled pixels to each threads
+
+    if shuffle {
+        all_pixels.shuffle(&mut rand::thread_rng());
+    }
+
     for (index, pixel) in all_pixels.iter().enumerate() {
         let id = index / pixels_per_thread;
         pixel_set[id].push(*pixel);
     }
-    pixel_set
+
+    (pixel_set, pixels_per_thread as u64)
 }
