@@ -48,13 +48,22 @@ pub fn ray_color(r: &Ray, background: &Color, world: &impl Hittable, depth: i32)
     let mut scattered = Ray::default();
     let mut attenuation = Color::default();
     let emitted = rec.mat_ptr.as_ref().unwrap().emitted(rec.u, rec.v, &rec.p);
+    let mut pdf = 1.0;
     if !rec
         .mat_ptr
         .as_ref()
         .unwrap()
-        .scatter(r, &rec, &mut attenuation, &mut scattered)
+        .scatter(r, &rec, &mut attenuation, &mut scattered, &mut pdf)
     {
         return emitted;
     }
-    emitted + attenuation * ray_color(&scattered, background, world, depth - 1)
+    emitted
+        + attenuation
+            * rec
+                .mat_ptr
+                .as_ref()
+                .unwrap()
+                .scattering_pdf(r, &rec, &scattered)
+            * ray_color(&scattered, background, world, depth - 1)
+            / pdf
 }
