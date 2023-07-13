@@ -60,13 +60,19 @@ impl Material for Lambertian {
         scattered: &mut Ray,
         pdf: &mut f64,
     ) -> bool {
-        let mut scatter_dir = rec.normal + Vec3::random_unit_vector();
-        if scatter_dir.near_zero() {
-            scatter_dir = rec.normal; // Catch degenerate scatter direction
-        }
-        *scattered = Ray::new(&rec.p, &scatter_dir.unit(), r_in.time());
+        // let mut scatter_dir = rec.normal + Vec3::random_unit_vector();
+        // if scatter_dir.near_zero() {
+        //     scatter_dir = rec.normal; // Catch degenerate scatter direction
+        // }
+        // *scattered = Ray::new(&rec.p, &scatter_dir.unit(), r_in.time());
+        // *attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
+        // *pdf = dot(&rec.normal, &scattered.direction()) / PI;
+        //
+        // test different sampling strategy
+        let direction = Vec3::random_in_hemisphere(&rec.normal);
+        *scattered = Ray::new(&rec.p, &direction.unit(), r_in.time());
         *attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
-        *pdf = dot(&rec.normal, &scattered.direction()) / PI;
+        *pdf = 0.5 / PI;
         true
     }
 
