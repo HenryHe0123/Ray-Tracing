@@ -1,4 +1,5 @@
 use crate::rt_weekend::{clamp, random_double, random_double_range};
+use std::f64::consts::PI;
 use std::fmt;
 use std::ops::{Add, Div, Mul, Sub};
 use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
@@ -48,7 +49,7 @@ impl Vec3 {
 
     pub fn random_in_unit_disk() -> Self {
         loop {
-            let p = Vec3::new(
+            let p = Vec3(
                 random_double_range(-1.0, 1.0),
                 random_double_range(-1.0, 1.0),
                 0.0,
@@ -57,6 +58,18 @@ impl Vec3 {
                 break p;
             }
         }
+    }
+
+    pub fn random_cosine_direction() -> Self {
+        let r1 = random_double();
+        let r2 = random_double();
+        let z = (1.0 - r2).sqrt();
+
+        let phi = 2.0 * PI * r1;
+        let x = phi.cos() * r2.sqrt();
+        let y = phi.sin() * r2.sqrt();
+
+        Vec3(x, y, z)
     }
 
     pub fn near_zero(&self) -> bool {

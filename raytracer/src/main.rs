@@ -6,6 +6,7 @@ pub mod constant_medium;
 pub mod hittable;
 pub mod material;
 pub mod mybox;
+pub mod onb;
 pub mod perlin;
 pub mod ray;
 pub mod rt_weekend;
@@ -26,7 +27,7 @@ use std::{fs::File, process::exit};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image2.jpg");
+    let path = std::path::Path::new("output/book3/image3.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -84,7 +85,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             width = 600;
-            samples_per_pixel = 100;
+            samples_per_pixel = 200;
             background = Color::default();
             lookfrom = Point3::new(278.0, 278.0, -800.0);
             lookat = Point3::new(278.0, 278.0, 0.0);

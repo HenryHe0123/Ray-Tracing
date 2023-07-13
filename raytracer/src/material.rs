@@ -1,4 +1,5 @@
 use crate::hittable::HitRecord;
+use crate::onb::ONB;
 use crate::ray::Ray;
 use crate::rt_weekend::random_double;
 use crate::texture::{SolidColor, Texture};
@@ -68,11 +69,11 @@ impl Material for Lambertian {
         // *attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
         // *pdf = dot(&rec.normal, &scattered.direction()) / PI;
         //
-        // test different sampling strategy
-        let direction = Vec3::random_in_hemisphere(&rec.normal);
+        let uvw = ONB::build_from_w(&rec.normal);
+        let direction = uvw.local_vec(&Vec3::random_cosine_direction());
         *scattered = Ray::new(&rec.p, &direction.unit(), r_in.time());
         *attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
-        *pdf = 0.5 / PI;
+        *pdf = dot(&uvw.w(), &scattered.direction()) / PI;
         true
     }
 
