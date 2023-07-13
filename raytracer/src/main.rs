@@ -22,12 +22,14 @@ use crate::scene::*;
 use crate::vec3::Vec3;
 use console::style;
 use image::{ImageBuffer, RgbImage};
-use indicatif::ProgressBar;
-use std::{fs::File, process::exit};
+use indicatif::{MultiProgress, ProgressBar};
+use rand::seq::SliceRandom;
+use std::sync::{mpsc, Arc};
+use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image3.jpg");
+    let path = std::path::Path::new("output/book2/image22.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -45,7 +47,7 @@ fn main() {
     let vfov;
     //let mut vfov = 40.0;
     let mut background = Color::new(0.7, 0.8, 1.0);
-    let choice = 6;
+    let choice = 0;
 
     match choice {
         1 => {
@@ -105,7 +107,7 @@ fn main() {
             world = final_scene();
             aspect_ratio = 1.0;
             width = 800;
-            samples_per_pixel = 2500;
+            samples_per_pixel = 8000;
             background = Color::default();
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
@@ -131,27 +133,85 @@ fn main() {
     let quality = 100;
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
-    let progress = if option_env!("CI").unwrap_or_default() == "true" {
-        ProgressBar::hidden()
-    } else {
-        ProgressBar::new((height * width) as u64)
-    };
+    //Multi Threads
+    let threads_number: usize = 3;
 
-    for j in 0..height {
-        for i in 0..width {
-            let pixel = img.get_pixel_mut(i, j);
-            let mut pixel_color = Color::default();
-            for _s in 0..samples_per_pixel {
-                let u = ((i as f64) + random_double()) / ((width - 1) as f64);
-                let v = (((height - j - 1) as f64) + random_double()) / ((height - 1) as f64);
-                let r = camera.get_ray(u, v, 0.0, 1.0);
-                pixel_color += ray_color(&r, &background, &world, max_bounce_depth);
+    let multi_progress = MultiProgress::new();
+
+    let pixels_per_thread = (width * height) as usize / threads_number;
+    let pixel_list = pixel_allocate(width, height, threads_number);
+    let mut threads = Vec::new();
+    let mut recv = Vec::new();
+
+    let world = Arc::new(world);
+
+    for (k, pixels) in pixel_list.iter().enumerate() {
+        let (tx, rx) = mpsc::channel();
+        recv.push(rx);
+        //let world = world.clone();
+        let world = Arc::clone(&world);
+        let camera = camera;
+        let pixels = pixels.clone();
+        let pb = multi_progress.add(ProgressBar::new(pixels_per_thread as u64));
+        pb.set_prefix(format!("Process {}", k));
+        let handle = thread::spawn(move || {
+            for pixel in pixels {
+                let mut pixel_color = Color::default();
+                for _s in 0..samples_per_pixel {
+                    let u = ((pixel.0 as f64) + random_double()) / ((width - 1) as f64);
+                    let v =
+                        (((height - pixel.1 - 1) as f64) + random_double()) / ((height - 1) as f64);
+                    let r = camera.get_ray(u, v, 0.0, 1.0);
+                    pixel_color += ray_color(&r, &background, world.as_ref(), max_bounce_depth);
+                }
+                tx.send((pixel, pixel_color)).unwrap();
+                pb.inc(1);
             }
+            pb.finish();
+        });
+        threads.push(handle);
+    }
+
+    if option_env!("CI").unwrap_or_default() == "true" {
+        multi_progress.join().unwrap();
+    }
+
+    for _k in 0..pixels_per_thread {
+        for receiver in &recv {
+            let ((i, j), pixel_color) = receiver.recv().unwrap();
+            let pixel = img.get_pixel_mut(i, j);
             *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
-            progress.inc(1);
         }
     }
-    progress.finish();
+
+    for thread in threads {
+        thread.join().unwrap();
+    }
+
+    // Single Thread
+    //
+    // let progress = if option_env!("CI").unwrap_or_default() == "true" {
+    //     ProgressBar::hidden()
+    // } else {
+    //     ProgressBar::new((height * width) as u64)
+    // };
+    //
+    // for j in 0..height {
+    //     for i in 0..width {
+    //         let pixel = img.get_pixel_mut(i, j);
+    //         let mut pixel_color = Color::default();
+    //         for _s in 0..samples_per_pixel {
+    //             let u = ((i as f64) + random_double()) / ((width - 1) as f64);
+    //             let v = (((height - j - 1) as f64) + random_double()) / ((height - 1) as f64);
+    //             let r = camera.get_ray(u, v, 0.0, 1.0);
+    //             pixel_color += ray_color(&r, &background, &world, max_bounce_depth);
+    //         }
+    //         *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
+    //         progress.inc(1);
+    //     }
+    // }
+    //
+    // progress.finish();
 
     println!(
         "Output image as \"{}\"",
@@ -165,4 +225,25 @@ fn main() {
     }
 
     exit(0);
+}
+
+//----------------------------------------------------------------------------------------------
+
+fn pixel_allocate(w: u32, h: u32, threads_num: usize) -> Vec<Vec<(u32, u32)>> {
+    let pixels_per_thread = (w * h) as usize / threads_num;
+    let mut pixel_set = vec![Vec::new(); threads_num];
+
+    let mut all_pixels = Vec::new();
+    for j in 0..h {
+        for i in 0..w {
+            all_pixels.push((i, j));
+        }
+    }
+    all_pixels.shuffle(&mut rand::thread_rng());
+    //allocate shuffled pixels to each threads
+    for (index, pixel) in all_pixels.iter().enumerate() {
+        let id = index / pixels_per_thread;
+        pixel_set[id].push(*pixel);
+    }
+    pixel_set
 }

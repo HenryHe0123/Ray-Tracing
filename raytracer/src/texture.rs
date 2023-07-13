@@ -2,7 +2,7 @@ use crate::perlin::Perlin;
 use crate::rt_weekend::clamp;
 use crate::vec3::{Color, Point3};
 use image::GenericImageView;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub trait Texture {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
@@ -35,19 +35,22 @@ impl Texture for SolidColor {
 
 #[derive(Clone, Default)]
 pub struct CheckerTexture {
-    pub even: Option<Rc<dyn Texture>>,
-    pub odd: Option<Rc<dyn Texture>>,
+    pub even: Option<Arc<dyn Texture + Send + Sync>>,
+    pub odd: Option<Arc<dyn Texture + Send + Sync>>,
 }
 
 impl CheckerTexture {
     pub fn new(color1: &Color, color2: &Color) -> Self {
         Self {
-            even: Some(Rc::new(SolidColor::new(color1))),
-            odd: Some(Rc::new(SolidColor::new(color2))),
+            even: Some(Arc::new(SolidColor::new(color1))),
+            odd: Some(Arc::new(SolidColor::new(color2))),
         }
     }
 
-    pub fn new_from_opt(even: &Option<Rc<dyn Texture>>, odd: &Option<Rc<dyn Texture>>) -> Self {
+    pub fn new_from_opt(
+        even: &Option<Arc<dyn Texture + Send + Sync>>,
+        odd: &Option<Arc<dyn Texture + Send + Sync>>,
+    ) -> Self {
         Self {
             even: even.clone(),
             odd: odd.clone(),

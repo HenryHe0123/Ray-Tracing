@@ -4,17 +4,17 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 use std::f64::consts::PI;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct Sphere {
     pub center: Point3,
     pub radius: f64,
-    pub mat_ptr: Rc<dyn Material>,
+    pub mat_ptr: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(cen: &Vec3, r: f64, p_clone: Rc<dyn Material>) -> Self {
+    pub fn new(cen: &Vec3, r: f64, p_clone: Arc<dyn Material>) -> Self {
         Sphere {
             center: *cen,
             radius: r,
@@ -59,7 +59,7 @@ impl Hittable for Sphere {
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, &outward_normal);
         Sphere::get_sphere_uv(&outward_normal, &mut rec.u, &mut rec.v);
-        rec.mat_ptr = Some(Rc::clone(&self.mat_ptr));
+        rec.mat_ptr = Some(Arc::clone(&self.mat_ptr));
         true
     }
 
@@ -76,7 +76,7 @@ pub struct MovingSphere {
     pub radius: f64,
     pub time0: f64,
     pub time1: f64,
-    pub mat_ptr: Rc<dyn Material>,
+    pub mat_ptr: Arc<dyn Material>,
 }
 
 impl MovingSphere {
@@ -86,7 +86,7 @@ impl MovingSphere {
         r: f64,
         time0: f64,
         time1: f64,
-        p_clone: Rc<dyn Material>,
+        p_clone: Arc<dyn Material>,
     ) -> Self {
         MovingSphere {
             center0: *cen0,
@@ -125,7 +125,7 @@ impl Hittable for MovingSphere {
         rec.p = r.at(root);
         let outward_normal = (rec.p - self.center(r.time())) / self.radius;
         rec.set_face_normal(r, &outward_normal);
-        rec.mat_ptr = Some(Rc::clone(&self.mat_ptr));
+        rec.mat_ptr = Some(Arc::clone(&self.mat_ptr));
         true
     }
 

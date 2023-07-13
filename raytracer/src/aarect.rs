@@ -3,11 +3,11 @@ use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{Point3, Vec3};
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone, Default)]
 pub struct XYRect {
-    mp: Option<Rc<dyn Material>>,
+    mp: Option<Arc<dyn Material>>,
     x0: f64,
     x1: f64,
     y0: f64,
@@ -16,7 +16,7 @@ pub struct XYRect {
 }
 
 impl XYRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, p_clone: Rc<dyn Material>) -> Self {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, p_clone: Arc<dyn Material>) -> Self {
         Self {
             x0,
             x1,
@@ -60,7 +60,7 @@ impl Hittable for XYRect {
 
 #[derive(Clone, Default)]
 pub struct XZRect {
-    mp: Option<Rc<dyn Material>>,
+    mp: Option<Arc<dyn Material>>,
     x0: f64,
     x1: f64,
     z0: f64,
@@ -69,7 +69,7 @@ pub struct XZRect {
 }
 
 impl XZRect {
-    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, p_clone: Rc<dyn Material>) -> Self {
+    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, p_clone: Arc<dyn Material>) -> Self {
         Self {
             x0,
             x1,
@@ -113,7 +113,7 @@ impl Hittable for XZRect {
 
 #[derive(Clone, Default)]
 pub struct YZRect {
-    mp: Option<Rc<dyn Material>>,
+    mp: Option<Arc<dyn Material>>,
     y0: f64,
     y1: f64,
     z0: f64,
@@ -122,7 +122,7 @@ pub struct YZRect {
 }
 
 impl YZRect {
-    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, p_clone: Rc<dyn Material>) -> Self {
+    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, p_clone: Arc<dyn Material>) -> Self {
         Self {
             y0,
             y1,

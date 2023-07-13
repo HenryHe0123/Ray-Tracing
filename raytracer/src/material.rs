@@ -5,9 +5,9 @@ use crate::rt_weekend::random_double;
 use crate::texture::{SolidColor, Texture};
 use crate::vec3::{dot, reflect, refract, Color, Point3, Vec3};
 use std::f64::consts::PI;
-use std::rc::Rc;
+use std::sync::Arc;
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(
         &self,
         _r_in: &Ray,
@@ -20,7 +20,7 @@ pub trait Material {
     }
 
     fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
-        0.0
+        1.0
     }
 
     fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
@@ -30,24 +30,24 @@ pub trait Material {
 
 #[derive(Clone, Default)]
 pub struct Lambertian {
-    pub albedo: Option<Rc<dyn Texture>>,
+    pub albedo: Option<Arc<dyn Texture + Send + Sync>>,
 }
 
 impl Lambertian {
     pub fn new(a: &Color) -> Self {
         //new a solid color
         Lambertian {
-            albedo: Some(Rc::new(SolidColor::new(a))),
+            albedo: Some(Arc::new(SolidColor::new(a))),
         }
     }
 
-    pub fn new_from_ptr(a: &Rc<dyn Texture>) -> Self {
+    pub fn new_from_ptr(a: &Arc<dyn Texture + Send + Sync>) -> Self {
         Lambertian {
             albedo: Some(a.clone()),
         }
     }
 
-    pub fn new_from_opt(a: &Option<Rc<dyn Texture>>) -> Self {
+    pub fn new_from_opt(a: &Option<Arc<dyn Texture + Send + Sync>>) -> Self {
         Lambertian { albedo: a.clone() }
     }
 }
@@ -170,17 +170,17 @@ fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
 
 #[derive(Clone, Default)]
 pub struct DiffuseLight {
-    emit: Option<Rc<dyn Texture>>,
+    emit: Option<Arc<dyn Texture + Send + Sync>>,
 }
 
 impl DiffuseLight {
     pub fn new(c: &Color) -> Self {
         Self {
-            emit: Some(Rc::new(SolidColor::new(c))),
+            emit: Some(Arc::new(SolidColor::new(c))),
         }
     }
 
-    pub fn new_from_ptr(a: &Rc<dyn Texture>) -> Self {
+    pub fn new_from_ptr(a: &Arc<dyn Texture + Send + Sync>) -> Self {
         Self {
             emit: Some(a.clone()),
         }
@@ -206,17 +206,17 @@ impl Material for DiffuseLight {
 
 #[derive(Clone, Default)]
 pub struct Isotropic {
-    pub albedo: Option<Rc<dyn Texture>>,
+    pub albedo: Option<Arc<dyn Texture + Send + Sync>>,
 }
 
 impl Isotropic {
     pub fn new(c: &Color) -> Self {
         Self {
-            albedo: Some(Rc::new(SolidColor::new(c))),
+            albedo: Some(Arc::new(SolidColor::new(c))),
         }
     }
 
-    pub fn new_from_ptr(a: &Rc<dyn Texture>) -> Self {
+    pub fn new_from_ptr(a: &Arc<dyn Texture + Send + Sync>) -> Self {
         Self {
             albedo: Some(a.clone()),
         }

@@ -6,29 +6,33 @@ use crate::rt_weekend::random_double;
 use crate::texture::Texture;
 use crate::vec3::{Color, Vec3};
 use std::f64::INFINITY;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone, Default)]
 pub struct ConstantMedium {
-    pub boundary: Option<Rc<dyn Hittable>>,
-    pub phase_function: Option<Rc<dyn Material>>,
+    pub boundary: Option<Arc<dyn Hittable>>,
+    pub phase_function: Option<Arc<dyn Material>>,
     pub neg_inv_density: f64,
 }
 
 impl ConstantMedium {
-    pub fn new(b: Rc<dyn Hittable>, d: f64, c: &Color) -> Self {
+    pub fn new(b: Arc<dyn Hittable>, d: f64, c: &Color) -> Self {
         Self {
             boundary: Some(b),
             neg_inv_density: -1.0 / d,
-            phase_function: Some(Rc::new(Isotropic::new(c))),
+            phase_function: Some(Arc::new(Isotropic::new(c))),
         }
     }
 
-    pub fn new_from_texture_ptr(b: Rc<dyn Hittable>, d: f64, a: &Rc<dyn Texture>) -> Self {
+    pub fn new_from_texture_ptr(
+        b: Arc<dyn Hittable>,
+        d: f64,
+        a: &Arc<dyn Texture + Send + Sync>,
+    ) -> Self {
         Self {
             boundary: Some(b),
             neg_inv_density: -1.0 / d,
-            phase_function: Some(Rc::new(Isotropic::new_from_ptr(a))),
+            phase_function: Some(Arc::new(Isotropic::new_from_ptr(a))),
         }
     }
 }

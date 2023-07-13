@@ -3,12 +3,12 @@ use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::ray::Ray;
 use crate::rt_weekend::random_int_range;
 use std::cmp::Ordering;
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Clone, Default)]
 pub struct BVHNode {
-    left: Option<Rc<dyn Hittable>>,
-    right: Option<Rc<dyn Hittable>>,
+    left: Option<Arc<dyn Hittable>>,
+    right: Option<Arc<dyn Hittable>>,
     box_: AABB,
 }
 
@@ -24,7 +24,7 @@ impl BVHNode {
     }
 
     pub fn build(
-        objects: &mut [Rc<dyn Hittable>],
+        objects: &mut [Arc<dyn Hittable>],
         start: usize,
         end: usize,
         time0: f64,
@@ -50,8 +50,8 @@ impl BVHNode {
             _other => {
                 objects[start..end].sort_by(|a, b| BVHNode::box_compare_order(a, b, axis as u8));
                 let mid = start + object_span / 2;
-                node.left = Some(Rc::new(Self::build(objects, start, mid, time0, time1)));
-                node.right = Some(Rc::new(Self::build(objects, mid, end, time0, time1)));
+                node.left = Some(Arc::new(Self::build(objects, start, mid, time0, time1)));
+                node.right = Some(Arc::new(Self::build(objects, mid, end, time0, time1)));
             }
         }
         let mut box_left = AABB::default();
@@ -73,7 +73,7 @@ impl BVHNode {
         node
     }
 
-    fn box_compare(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: u8) -> bool {
+    fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: u8) -> bool {
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
@@ -82,7 +82,7 @@ impl BVHNode {
         box_a.min().index(axis) < box_b.min().index(axis)
     }
 
-    fn box_compare_order(a: &Rc<dyn Hittable>, b: &Rc<dyn Hittable>, axis: u8) -> Ordering {
+    fn box_compare_order(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: u8) -> Ordering {
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {

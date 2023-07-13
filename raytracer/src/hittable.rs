@@ -3,7 +3,7 @@ use crate::material::Material;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 use std::f64::INFINITY;
-use std::rc::Rc;
+use std::sync::Arc;
 use std::vec::Vec;
 
 #[derive(Clone, Default)]
@@ -14,11 +14,11 @@ pub struct HitRecord {
     pub u: f64,
     pub v: f64,           //surface coordinates
     pub front_face: bool, //if ray hit to the front face
-    pub mat_ptr: Option<Rc<dyn Material>>,
+    pub mat_ptr: Option<Arc<dyn Material>>,
 }
 
 impl HitRecord {
-    pub fn new(p_clone: Rc<dyn Material>) -> Self {
+    pub fn new(p_clone: Arc<dyn Material>) -> Self {
         HitRecord {
             p: Point3::default(),
             normal: Vec3::default(),
@@ -40,14 +40,14 @@ impl HitRecord {
     }
 }
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool;
 }
 
 #[derive(Clone)]
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Arc<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -61,7 +61,7 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, obj: Rc<dyn Hittable>) {
+    pub fn add(&mut self, obj: Arc<dyn Hittable>) {
         self.objects.push(obj);
     }
 }
@@ -113,7 +113,7 @@ impl Default for HittableList {
 
 #[derive(Clone, Default)]
 pub struct Translate {
-    pub ptr: Option<Rc<dyn Hittable>>,
+    pub ptr: Option<Arc<dyn Hittable>>,
     pub offset: Vec3,
 }
 
@@ -148,7 +148,7 @@ impl Hittable for Translate {
 }
 
 impl Translate {
-    pub fn new(p_clone: Rc<dyn Hittable>, displacement: &Vec3) -> Self {
+    pub fn new(p_clone: Arc<dyn Hittable>, displacement: &Vec3) -> Self {
         Self {
             ptr: Some(p_clone),
             offset: *displacement,
@@ -158,7 +158,7 @@ impl Translate {
 
 #[derive(Clone, Default)]
 pub struct RotateY {
-    pub ptr: Option<Rc<dyn Hittable>>,
+    pub ptr: Option<Arc<dyn Hittable>>,
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub hasbox: bool,
@@ -209,7 +209,7 @@ impl Hittable for RotateY {
 }
 
 impl RotateY {
-    pub fn new(p_clone: Rc<dyn Hittable>, angle: f64) -> Self {
+    pub fn new(p_clone: Arc<dyn Hittable>, angle: f64) -> Self {
         let radians = angle.to_radians();
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
