@@ -16,7 +16,10 @@ pub mod sphere;
 pub mod texture;
 pub mod vec3;
 
+use crate::aarect::XZRect;
 use crate::camera::Camera;
+use crate::hittable::Hittable;
+use crate::material::Empty;
 use crate::ray::ray_color;
 use crate::rt_weekend::random_double;
 use crate::scene::*;
@@ -30,7 +33,7 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image6.jpg");
+    let path = std::path::Path::new("output/book3/image7.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -49,6 +52,8 @@ fn main() {
     //let mut vfov = 40.0;
     let mut background = Color::new(0.7, 0.8, 1.0);
     let choice = 6;
+
+    let light = XZRect::new(213., 343., 227., 332., 554., Arc::new(Empty::default()));
 
     match choice {
         1 => {
@@ -88,7 +93,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             width = 600;
-            samples_per_pixel = 200;
+            samples_per_pixel = 10;
             background = Color::default();
             lookfrom = Point3::new(278.0, 278.0, -800.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
@@ -152,6 +157,8 @@ fn main() {
         let world = Arc::clone(&world);
         let camera = camera;
         let pixels = pixels.clone();
+        let light = light.clone();
+        let lights = Arc::new(light) as Arc<dyn Hittable>;
         let pb = multi_progress.add(ProgressBar::new(pixels_per_thread));
         pb.set_prefix(format!("Process {}", k));
         let handle = thread::spawn(move || {
@@ -162,7 +169,8 @@ fn main() {
                     let v =
                         (((height - pixel.1 - 1) as f64) + random_double()) / ((height - 1) as f64);
                     let r = camera.get_ray(u, v, 0.0, 1.0);
-                    pixel_color += ray_color(&r, &background, world.as_ref(), max_bounce_depth);
+                    pixel_color +=
+                        ray_color(&r, &background, world.as_ref(), &lights, max_bounce_depth);
                 }
                 tx.send((pixel, pixel_color)).unwrap();
                 pb.inc(1);

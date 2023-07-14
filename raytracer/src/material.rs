@@ -29,6 +29,10 @@ pub trait Material: Send + Sync {
     }
 }
 
+#[derive(Copy, Clone, Default)]
+pub struct Empty {}
+impl Material for Empty {}
+
 #[derive(Clone, Default)]
 pub struct Lambertian {
     pub albedo: Option<Arc<dyn Texture + Send + Sync>>,

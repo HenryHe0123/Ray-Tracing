@@ -43,6 +43,12 @@ impl HitRecord {
 pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool;
+    fn pdf_value(&self, _o: &Point3, _v: &Vec3) -> f64 {
+        0.0
+    }
+    fn random(&self, _o: &Vec3) -> Vec3 {
+        Vec3::new(1.0, 0.0, 0.0)
+    }
 }
 
 #[derive(Clone)]
