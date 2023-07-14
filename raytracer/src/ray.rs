@@ -48,7 +48,11 @@ pub fn ray_color(r: &Ray, background: &Color, world: &impl Hittable, depth: i32)
 
     let mut scattered = Ray::default();
     let mut albedo = Color::default();
-    let emitted = rec.mat_ptr.as_ref().unwrap().emitted(rec.u, rec.v, &rec.p);
+    let emitted = rec
+        .mat_ptr
+        .as_ref()
+        .unwrap()
+        .emitted(r, &rec, rec.u, rec.v, &rec.p);
     let mut pdf = 1.0;
     if !rec
         .mat_ptr
@@ -81,6 +85,7 @@ pub fn ray_color(r: &Ray, background: &Color, world: &impl Hittable, depth: i32)
 
     pdf = distance_squared / (light_cosine * light_area);
     scattered = Ray::new(&rec.p, &to_light, r.time());
+    //
 
     emitted
         + albedo

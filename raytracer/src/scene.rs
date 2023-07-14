@@ -2,7 +2,7 @@ use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::bvh::BVHNode;
 use crate::constant_medium::ConstantMedium;
 use crate::hittable::{HittableList, RotateY, Translate};
-use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
+use crate::material::{Dielectric, DiffuseLight, FlipFace, Lambertian, Metal};
 use crate::mybox::MyBox;
 use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
@@ -171,7 +171,11 @@ pub fn cornell_box() -> HittableList {
     let light = Arc::new(DiffuseLight::new(&Color::new(15.0, 15.0, 15.0)));
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 555., green)));
     objects.add(Arc::new(YZRect::new(0., 555., 0., 555., 0., red)));
-    objects.add(Arc::new(XZRect::new(213., 343., 227., 332., 554., light)));
+    //flip light
+    objects.add(Arc::new(FlipFace::new(Arc::new(XZRect::new(
+        213., 343., 227., 332., 554., light,
+    )))));
+    //
     objects.add(Arc::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
     objects.add(Arc::new(XZRect::new(
         0.,

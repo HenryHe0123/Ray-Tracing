@@ -1,4 +1,5 @@
-use crate::hittable::HitRecord;
+use crate::aabb::AABB;
+use crate::hittable::{HitRecord, Hittable};
 use crate::onb::ONB;
 use crate::ray::Ray;
 use crate::rt_weekend::random_double;
@@ -23,7 +24,7 @@ pub trait Material: Send + Sync {
         1.0
     }
 
-    fn emitted(&self, _u: f64, _v: f64, _p: &Point3) -> Color {
+    fn emitted(&self, _r_in: &Ray, _rec: &HitRecord, _u: f64, _v: f64, _p: &Point3) -> Color {
         Color::default()
     }
 }
@@ -199,8 +200,12 @@ impl Material for DiffuseLight {
         false
     }
 
-    fn emitted(&self, u: f64, v: f64, p: &Point3) -> Color {
-        self.emit.as_ref().unwrap().value(u, v, p)
+    fn emitted(&self, _r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Point3) -> Color {
+        if rec.front_face {
+            self.emit.as_ref().unwrap().value(u, v, p)
+        } else {
+            Color::default()
+        }
     }
 }
 
@@ -235,5 +240,33 @@ impl Material for Isotropic {
         *scattered = Ray::new(&rec.p, &Vec3::random_in_unit_sphere(), r_in.time());
         *attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
         true
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct FlipFace {
+    pub ptr: Option<Arc<dyn Hittable + Send + Sync>>,
+}
+
+impl FlipFace {
+    pub fn new(p_clone: Arc<dyn Hittable + Send + Sync>) -> Self {
+        Self { ptr: Some(p_clone) }
+    }
+}
+
+impl Hittable for FlipFace {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+        if !self.ptr.as_ref().unwrap().hit(r, t_min, t_max, rec) {
+            return false;
+        }
+        rec.front_face = !rec.front_face;
+        true
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
+        self.ptr
+            .as_ref()
+            .unwrap()
+            .bounding_box(time0, time1, output_box)
     }
 }
