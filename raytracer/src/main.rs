@@ -7,6 +7,7 @@ pub mod hittable;
 pub mod material;
 pub mod mybox;
 pub mod onb;
+pub mod pdf;
 pub mod perlin;
 pub mod ray;
 pub mod rt_weekend;
@@ -29,7 +30,7 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image5.jpg");
+    let path = std::path::Path::new("output/book3/image6.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -87,7 +88,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             width = 600;
-            samples_per_pixel = 10;
+            samples_per_pixel = 200;
             background = Color::default();
             lookfrom = Point3::new(278.0, 278.0, -800.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
@@ -134,7 +135,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     //Multi Threads
-    let threads_number: usize = 14;
+    let threads_number: usize = 10;
     let shuffle: bool = true;
 
     let multi_progress = MultiProgress::new();

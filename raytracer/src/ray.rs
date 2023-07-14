@@ -1,6 +1,6 @@
 use crate::hittable::{HitRecord, Hittable};
-use crate::rt_weekend::random_double_range;
-use crate::vec3::{dot, Color, Point3, Vec3};
+use crate::pdf::{CosPDF, PDF};
+use crate::vec3::{Color, Point3, Vec3};
 use std::f64::INFINITY;
 
 #[derive(Debug, Copy, Clone, Default)]
@@ -53,38 +53,42 @@ pub fn ray_color(r: &Ray, background: &Color, world: &impl Hittable, depth: i32)
         .as_ref()
         .unwrap()
         .emitted(r, &rec, rec.u, rec.v, &rec.p);
-    let mut pdf = 1.0;
+    let mut pdf_val = 1.0;
     if !rec
         .mat_ptr
         .as_ref()
         .unwrap()
-        .scatter(r, &rec, &mut albedo, &mut scattered, &mut pdf)
+        .scatter(r, &rec, &mut albedo, &mut scattered, &mut pdf_val)
     {
         return emitted;
     }
 
-    //hard code
-    let on_light = Point3::new(
-        random_double_range(230., 343.),
-        554.,
-        random_double_range(227., 332.),
-    );
-    let mut to_light = on_light - rec.p;
-    let distance_squared = to_light.length_squared();
-    to_light = to_light.unit();
+    let p = CosPDF::new(&rec.normal);
+    scattered = Ray::new(&rec.p, &p.generate(), r.time());
+    pdf_val = p.value(&scattered.direction());
 
-    if dot(&to_light, &rec.normal) < 0.0 {
-        return emitted;
-    }
-
-    let light_area = ((343 - 213) * (332 - 227)) as f64;
-    let light_cosine = to_light.y().abs();
-    if light_cosine < 0.000001 {
-        return emitted;
-    }
-
-    pdf = distance_squared / (light_cosine * light_area);
-    scattered = Ray::new(&rec.p, &to_light, r.time());
+    // hard code
+    // let on_light = Point3::new(
+    //     random_double_range(230., 343.),
+    //     554.,
+    //     random_double_range(227., 332.),
+    // );
+    // let mut to_light = on_light - rec.p;
+    // let distance_squared = to_light.length_squared();
+    // to_light = to_light.unit();
+    //
+    // if dot(&to_light, &rec.normal) < 0.0 {
+    //     return emitted;
+    // }
+    //
+    // let light_area = ((343 - 213) * (332 - 227)) as f64;
+    // let light_cosine = to_light.y().abs();
+    // if light_cosine < 0.000001 {
+    //     return emitted;
+    // }
+    //
+    // pdf = distance_squared / (light_cosine * light_area);
+    // scattered = Ray::new(&rec.p, &to_light, r.time());
     //
 
     emitted
@@ -95,5 +99,5 @@ pub fn ray_color(r: &Ray, background: &Color, world: &impl Hittable, depth: i32)
                 .unwrap()
                 .scattering_pdf(r, &rec, &scattered)
             * ray_color(&scattered, background, world, depth - 1)
-            / pdf
+            / pdf_val
 }
