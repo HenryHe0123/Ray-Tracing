@@ -29,7 +29,7 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book2/image22.jpg");
+    let path = std::path::Path::new("output/book3/image4.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -47,7 +47,7 @@ fn main() {
     let vfov;
     //let mut vfov = 40.0;
     let mut background = Color::new(0.7, 0.8, 1.0);
-    let choice = 0;
+    let choice = 6;
 
     match choice {
         1 => {
@@ -87,7 +87,7 @@ fn main() {
             world = cornell_box();
             aspect_ratio = 1.0;
             width = 600;
-            samples_per_pixel = 200;
+            samples_per_pixel = 10;
             background = Color::default();
             lookfrom = Point3::new(278.0, 278.0, -800.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
@@ -107,7 +107,7 @@ fn main() {
             world = final_scene();
             aspect_ratio = 1.0;
             width = 800;
-            samples_per_pixel = 8000;
+            samples_per_pixel = 10000;
             background = Color::default();
             lookfrom = Point3::new(478.0, 278.0, -600.0);
             lookat = Point3::new(278.0, 278.0, 0.0);
@@ -134,7 +134,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     //Multi Threads
-    let threads_number: usize = 3;
+    let threads_number: usize = 14;
     let shuffle: bool = true;
 
     let multi_progress = MultiProgress::new();
@@ -172,7 +172,7 @@ fn main() {
     }
 
     if option_env!("CI").unwrap_or_default() != "true" {
-        multi_progress.join().unwrap();
+        multi_progress.join_and_clear().unwrap();
     }
 
     for _k in 0..pixels_per_thread {
