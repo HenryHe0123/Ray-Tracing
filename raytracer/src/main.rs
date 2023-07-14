@@ -171,15 +171,18 @@ fn main() {
         threads.push(handle);
     }
 
-    if option_env!("CI").unwrap_or_default() == "true" {
+    if option_env!("CI").unwrap_or_default() != "true" {
         multi_progress.join().unwrap();
     }
 
     for _k in 0..pixels_per_thread {
         for receiver in &recv {
-            let ((i, j), pixel_color) = receiver.recv().unwrap();
-            let pixel = img.get_pixel_mut(i, j);
-            *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
+            if let Ok(((i, j), pixel_color)) = receiver.recv() {
+                let pixel = img.get_pixel_mut(i, j);
+                *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
+            } else {
+                continue;
+            }
         }
     }
 
