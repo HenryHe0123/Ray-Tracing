@@ -16,6 +16,7 @@ pub mod sphere;
 pub mod texture;
 pub mod vec3;
 
+use crate::aarect::XZRect;
 use crate::camera::Camera;
 use crate::hittable::{Hittable, HittableList};
 use crate::material::EmptyMaterial;
@@ -33,7 +34,7 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image10.jpg");
+    let path = std::path::Path::new("output/book3/image11.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -49,15 +50,15 @@ fn main() {
     //-------------------------------------------------
     let mut lights = HittableList::default();
 
-    // let light = XZRect::new(
-    //     213.,
-    //     343.,
-    //     227.,
-    //     332.,
-    //     554.,
-    //     Arc::new(EmptyMaterial::default()),
-    // );
-    // lights.add(Arc::new(light));
+    let light = XZRect::new(
+        213.,
+        343.,
+        227.,
+        332.,
+        554.,
+        Arc::new(EmptyMaterial::default()),
+    );
+    lights.add(Arc::new(light));
 
     let light = Sphere::new(
         &Point3::new(190., 90., 190.),
@@ -93,7 +94,7 @@ fn main() {
 
     //Multi Threads
     let threads_number: usize = 10;
-    let shuffle: bool = false;
+    let shuffle: bool = true;
 
     let multi_progress = MultiProgress::new();
     let (pixel_list, pixels_per_thread) = pixel_allocate(width, height, threads_number, shuffle);
