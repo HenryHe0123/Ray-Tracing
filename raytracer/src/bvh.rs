@@ -39,7 +39,7 @@ impl BVHNode {
                 node.right = Some(objects[start].clone());
             }
             2 => {
-                if Self::box_compare(&objects[start], &objects[start + 1], axis as u8) {
+                if Self::box_compare(&objects[start], &objects[start + 1], axis as usize) {
                     node.left = Some(objects[start].clone());
                     node.right = Some(objects[start + 1].clone());
                 } else {
@@ -48,7 +48,7 @@ impl BVHNode {
                 }
             }
             _other => {
-                objects[start..end].sort_by(|a, b| BVHNode::box_compare_order(a, b, axis as u8));
+                objects[start..end].sort_by(|a, b| BVHNode::box_compare_order(a, b, axis as usize));
                 let mid = start + object_span / 2;
                 node.left = Some(Arc::new(Self::build(objects, start, mid, time0, time1)));
                 node.right = Some(Arc::new(Self::build(objects, mid, end, time0, time1)));
@@ -73,25 +73,25 @@ impl BVHNode {
         node
     }
 
-    fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: u8) -> bool {
+    fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: usize) -> bool {
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
             panic!("No bounding box in BVHNode constructor.");
         }
-        box_a.min().index(axis) < box_b.min().index(axis)
+        box_a.min()[axis] < box_b.min()[axis]
     }
 
-    fn box_compare_order(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: u8) -> Ordering {
+    fn box_compare_order(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: usize) -> Ordering {
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
             panic!("No bounding box in BVHNode constructor.");
         }
 
-        if box_a.min().index(axis) < box_b.min().index(axis) {
+        if box_a.min()[axis] < box_b.min()[axis] {
             Ordering::Less
-        } else if box_a.min().index(axis) == box_b.min().index(axis) {
+        } else if box_a.min()[axis] == box_b.min()[axis] {
             Ordering::Equal
         } else {
             Ordering::Greater

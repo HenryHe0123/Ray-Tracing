@@ -30,8 +30,8 @@ pub trait Material: Send + Sync {
 }
 
 #[derive(Copy, Clone, Default)]
-pub struct Empty {}
-impl Material for Empty {}
+pub struct EmptyMaterial {}
+impl Material for EmptyMaterial {}
 
 #[derive(Clone, Default)]
 pub struct Lambertian {

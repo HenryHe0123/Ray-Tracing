@@ -35,9 +35,9 @@ impl AABB {
         let mut t_min = t_min;
         let mut t_max = t_max;
         for a in 0..3 {
-            let divider = 1.0 / r.direction().index(a);
-            let mut t0 = (self.min().index(a) - r.origin().index(a)) * divider;
-            let mut t1 = (self.max().index(a) - r.origin().index(a)) * divider;
+            let divider = 1.0 / r.direction()[a];
+            let mut t0 = (self.min()[a] - r.origin()[a]) * divider;
+            let mut t1 = (self.max()[a] - r.origin()[a]) * divider;
             if divider < 0.0 {
                 std::mem::swap(&mut t0, &mut t1);
             }

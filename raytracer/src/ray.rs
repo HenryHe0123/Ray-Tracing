@@ -1,5 +1,5 @@
 use crate::hittable::{HitRecord, Hittable};
-use crate::pdf::{HittablePDF, PDF};
+use crate::pdf::{CosPDF, HittablePDF, MixturePDF, PDF};
 use crate::vec3::{Color, Point3, Vec3};
 use std::f64::INFINITY;
 use std::sync::Arc;
@@ -71,8 +71,11 @@ pub fn ray_color(
     }
 
     let light_pdf = HittablePDF::new(lights.clone(), &rec.p);
-    scattered = Ray::new(&rec.p, &light_pdf.generate(), r.time());
-    pdf_val = light_pdf.value(&scattered.direction());
+    let cos_pdf = CosPDF::new(&rec.normal);
+    let mixed_pdf = MixturePDF::new(Arc::new(light_pdf), Arc::new(cos_pdf));
+
+    scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time());
+    pdf_val = mixed_pdf.value(&scattered.direction());
 
     emitted
         + albedo

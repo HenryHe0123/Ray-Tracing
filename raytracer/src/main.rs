@@ -19,7 +19,7 @@ pub mod vec3;
 use crate::aarect::XZRect;
 use crate::camera::Camera;
 use crate::hittable::Hittable;
-use crate::material::Empty;
+use crate::material::EmptyMaterial;
 use crate::ray::ray_color;
 use crate::rt_weekend::random_double;
 use crate::scene::*;
@@ -33,93 +33,32 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image7.jpg");
+    let path = std::path::Path::new("output/book3/image8.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let mut aspect_ratio = 16.0 / 9.0;
-    let mut width = 400;
-    let mut samples_per_pixel: u32 = 100;
+    let aspect_ratio = 1.0;
+    let width = 600;
+    let samples_per_pixel: u32 = 1000;
     let max_bounce_depth: i32 = 50;
 
     //World & Camera
-    let world;
-    let lookfrom;
-    let lookat;
-    let mut aperture = 0.0;
-    let vfov;
-    //let mut vfov = 40.0;
-    let mut background = Color::new(0.7, 0.8, 1.0);
-    let choice = 6;
+    let world = cornell_box();
+    let light = XZRect::new(
+        213.,
+        343.,
+        227.,
+        332.,
+        554.,
+        Arc::new(EmptyMaterial::default()),
+    );
 
-    let light = XZRect::new(213., 343., 227., 332., 554., Arc::new(Empty::default()));
-
-    match choice {
-        1 => {
-            world = random_scene();
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
-            vfov = 20.0;
-            aperture = 0.1;
-        }
-        2 => {
-            world = two_spheres();
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
-            vfov = 20.0;
-        }
-        3 => {
-            world = two_perlin_spheres();
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
-            vfov = 20.0;
-        }
-        4 => {
-            world = earth();
-            lookfrom = Point3::new(13.0, 2.0, 3.0);
-            lookat = Point3::new(0.0, 0.0, 0.0);
-            vfov = 20.0;
-        }
-        5 => {
-            world = simple_light();
-            samples_per_pixel = 400;
-            background = Color::default();
-            lookfrom = Point3::new(26.0, 3.0, 6.0);
-            lookat = Point3::new(0.0, 2.0, 0.0);
-            vfov = 20.0;
-        }
-        6 => {
-            world = cornell_box();
-            aspect_ratio = 1.0;
-            width = 600;
-            samples_per_pixel = 10;
-            background = Color::default();
-            lookfrom = Point3::new(278.0, 278.0, -800.0);
-            lookat = Point3::new(278.0, 278.0, 0.0);
-            vfov = 40.0;
-        }
-        7 => {
-            world = cornell_smoke();
-            aspect_ratio = 1.0;
-            width = 600;
-            samples_per_pixel = 200;
-            background = Color::default();
-            lookfrom = Point3::new(278.0, 278.0, -800.0);
-            lookat = Point3::new(278.0, 278.0, 0.0);
-            vfov = 40.0;
-        }
-        _other => {
-            world = final_scene();
-            aspect_ratio = 1.0;
-            width = 800;
-            samples_per_pixel = 10000;
-            background = Color::default();
-            lookfrom = Point3::new(478.0, 278.0, -600.0);
-            lookat = Point3::new(278.0, 278.0, 0.0);
-            vfov = 40.0;
-        }
-    }
+    let lookfrom = Point3::new(278.0, 278.0, -800.0);
+    let lookat = Point3::new(278.0, 278.0, 0.0);
+    let aperture = 0.0;
+    let vfov = 40.0;
+    let background = Color::default();
 
     let height = (width as f64 / aspect_ratio) as u32;
     let vup = Vec3::new(0.0, 1.0, 0.0);

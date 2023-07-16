@@ -176,11 +176,11 @@ impl Hittable for RotateY {
         let mut origin = r.origin();
         let mut direction = r.direction();
 
-        origin.0 = self.cos_theta * r.origin().0 - self.sin_theta * r.origin().2;
-        origin.2 = self.sin_theta * r.origin().0 + self.cos_theta * r.origin().2;
+        origin[0] = self.cos_theta * r.origin()[0] - self.sin_theta * r.origin()[2];
+        origin[2] = self.sin_theta * r.origin()[0] + self.cos_theta * r.origin()[2];
 
-        direction.0 = self.cos_theta * r.direction().0 - self.sin_theta * r.direction().2;
-        direction.2 = self.sin_theta * r.direction().0 + self.cos_theta * r.direction().2;
+        direction[0] = self.cos_theta * r.direction()[0] - self.sin_theta * r.direction()[2];
+        direction[2] = self.sin_theta * r.direction()[0] + self.cos_theta * r.direction()[2];
 
         let rotated_r = Ray::new(&origin, &direction, r.time());
 
@@ -196,11 +196,11 @@ impl Hittable for RotateY {
         let mut p = rec.p;
         let mut normal = rec.normal;
 
-        p.0 = self.cos_theta * rec.p.0 + self.sin_theta * rec.p.2;
-        p.2 = -self.sin_theta * rec.p.0 + self.cos_theta * rec.p.2;
+        p[0] = self.cos_theta * rec.p[0] + self.sin_theta * rec.p[2];
+        p[2] = -self.sin_theta * rec.p[0] + self.cos_theta * rec.p[2];
 
-        normal.0 = self.cos_theta * rec.normal.0 + self.sin_theta * rec.normal.2;
-        normal.2 = -self.sin_theta * rec.normal.0 + self.cos_theta * rec.normal.2;
+        normal[0] = self.cos_theta * rec.normal[0] + self.sin_theta * rec.normal[2];
+        normal[2] = -self.sin_theta * rec.normal[0] + self.cos_theta * rec.normal[2];
 
         rec.p = p;
         rec.set_face_normal(&rotated_r, &normal);
@@ -236,8 +236,8 @@ impl RotateY {
                     let new_z = -sin_theta * x + cos_theta * z;
                     let tester = Vec3::new(new_x, y, new_z);
                     for c in 0..3 {
-                        *min.index_borrow(c) = tester.index(c).min(min.index(c));
-                        *max.index_borrow(c) = tester.index(c).max(max.index(c));
+                        min[c] = tester[c].min(min[c]);
+                        max[c] = tester[c].max(max[c]);
                     }
                 }
             }

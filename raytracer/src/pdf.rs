@@ -1,5 +1,6 @@
 use crate::hittable::Hittable;
 use crate::onb::ONB;
+use crate::rt_weekend::random_double;
 use crate::vec3::{dot, Point3, Vec3};
 use std::f64::consts::PI;
 use std::sync::Arc;
@@ -11,7 +12,7 @@ pub trait PDF {
 
 #[derive(Copy, Clone, Default)]
 pub struct CosPDF {
-    pub uvw: ONB,
+    uvw: ONB,
 }
 
 impl CosPDF {
@@ -39,8 +40,8 @@ impl PDF for CosPDF {
 
 #[derive(Clone, Default)]
 pub struct HittablePDF {
-    pub o: Point3,
-    pub ptr: Option<Arc<dyn Hittable>>,
+    o: Point3,
+    ptr: Option<Arc<dyn Hittable>>,
 }
 
 impl HittablePDF {
@@ -59,5 +60,33 @@ impl PDF for HittablePDF {
 
     fn generate(&self) -> Vec3 {
         self.ptr.as_ref().unwrap().random(&self.o)
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct MixturePDF {
+    p: [Option<Arc<dyn PDF>>; 2],
+}
+
+impl MixturePDF {
+    pub fn new(p0: Arc<dyn PDF>, p1: Arc<dyn PDF>) -> Self {
+        Self {
+            p: [Some(p0), Some(p1)],
+        }
+    }
+}
+
+impl PDF for MixturePDF {
+    fn value(&self, direction: &Vec3) -> f64 {
+        0.5 * (self.p[0].as_ref().unwrap().value(direction)
+            + self.p[1].as_ref().unwrap().value(direction))
+    }
+
+    fn generate(&self) -> Vec3 {
+        if random_double() < 0.5 {
+            self.p[0].as_ref().unwrap().generate()
+        } else {
+            self.p[1].as_ref().unwrap().generate()
+        }
     }
 }
