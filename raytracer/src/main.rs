@@ -18,11 +18,12 @@ pub mod vec3;
 
 use crate::aarect::XZRect;
 use crate::camera::Camera;
-use crate::hittable::Hittable;
+use crate::hittable::{Hittable, HittableList};
 use crate::material::EmptyMaterial;
 use crate::ray::ray_color;
 use crate::rt_weekend::random_double;
 use crate::scene::*;
+//use crate::sphere::Sphere;
 use crate::vec3::Vec3;
 use console::style;
 use image::{ImageBuffer, RgbImage};
@@ -33,7 +34,7 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image8.jpg");
+    let path = std::path::Path::new("output/book3/image9.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -45,6 +46,10 @@ fn main() {
 
     //World & Camera
     let world = cornell_box();
+
+    //-------------------------------------------------
+    let mut lights = HittableList::default();
+
     let light = XZRect::new(
         213.,
         343.,
@@ -53,6 +58,15 @@ fn main() {
         554.,
         Arc::new(EmptyMaterial::default()),
     );
+    lights.add(Arc::new(light));
+
+    // let light = Sphere::new(
+    //     &Point3::new(190., 90., 190.),
+    //     90.,
+    //     Arc::new(EmptyMaterial::default()),
+    // );
+    // lights.add(Arc::new(light));
+    //--------------------------------------------------
 
     let lookfrom = Point3::new(278.0, 278.0, -800.0);
     let lookat = Point3::new(278.0, 278.0, 0.0);
@@ -79,7 +93,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     //Multi Threads
-    let threads_number: usize = 10;
+    let threads_number: usize = 14;
     let shuffle: bool = true;
 
     let multi_progress = MultiProgress::new();
@@ -96,8 +110,7 @@ fn main() {
         let world = Arc::clone(&world);
         let camera = camera;
         let pixels = pixels.clone();
-        let light = light.clone();
-        let lights = Arc::new(light) as Arc<dyn Hittable>;
+        let lights = Arc::new(lights.clone()) as Arc<dyn Hittable>;
         let pb = multi_progress.add(ProgressBar::new(pixels_per_thread));
         pb.set_prefix(format!("Process {}", k));
         let handle = thread::spawn(move || {

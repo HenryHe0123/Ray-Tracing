@@ -193,13 +193,18 @@ pub fn cornell_box() -> HittableList {
         555.,
         white.clone(),
     )));
+
+    let aluminum = Arc::new(Metal::new(&Color::new(0.8, 0.85, 0.88), 0.0));
     let box1 = Arc::new(MyBox::new(
         &Point3::new(0., 0., 0.),
         &Point3::new(165., 330., 165.),
-        white.clone(),
+        aluminum,
     ));
     let box1 = Arc::new(RotateY::new(box1, 15.0));
     let box1 = Arc::new(Translate::new(box1, &Vec3::new(265., 0., 295.)));
+    objects.add(box1);
+
+    //let glass = Arc::new(Dielectric::new(1.5));
     let box2 = Arc::new(MyBox::new(
         &Point3::new(0., 0., 0.),
         &Point3::new(165., 165., 165.),
@@ -207,8 +212,8 @@ pub fn cornell_box() -> HittableList {
     ));
     let box2 = Arc::new(RotateY::new(box2, -18.0));
     let box2 = Arc::new(Translate::new(box2, &Vec3::new(130., 0., 65.)));
-    objects.add(box1);
     objects.add(box2);
+
     objects
 }
 

@@ -1,6 +1,7 @@
 use crate::aabb::{surrounding_box, AABB};
 use crate::material::Material;
 use crate::ray::Ray;
+use crate::rt_weekend::random_int_range;
 use crate::vec3::{dot, Point3, Vec3};
 use std::f64::INFINITY;
 use std::sync::Arc;
@@ -108,6 +109,20 @@ impl Hittable for HittableList {
             first_box = false;
         }
         true
+    }
+
+    fn pdf_value(&self, o: &Point3, v: &Vec3) -> f64 {
+        let weight = 1.0 / (self.objects.len() as f64);
+        let mut sum = 0.0;
+        for object in &self.objects {
+            sum += weight * object.pdf_value(o, v);
+        }
+        sum
+    }
+
+    fn random(&self, o: &Vec3) -> Vec3 {
+        let size = self.objects.len() as i32;
+        self.objects[random_int_range(0, size - 1) as usize].random(o)
     }
 }
 

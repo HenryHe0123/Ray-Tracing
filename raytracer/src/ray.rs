@@ -1,5 +1,6 @@
 use crate::hittable::{HitRecord, Hittable};
-use crate::pdf::{CosPDF, HittablePDF, MixturePDF, PDF};
+use crate::material::ScatterRecord;
+use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::vec3::{Color, Point3, Vec3};
 use std::f64::INFINITY;
 use std::sync::Arc;
@@ -53,32 +54,30 @@ pub fn ray_color(
         return *background; // If the ray hits nothing, return the background color.
     }
 
-    let mut scattered = Ray::default();
-    let mut albedo = Color::default();
+    let mut srec = ScatterRecord::default();
     let emitted = rec
         .mat_ptr
         .as_ref()
         .unwrap()
         .emitted(r, &rec, rec.u, rec.v, &rec.p);
-    let mut pdf_val = 0.0;
-    if !rec
-        .mat_ptr
-        .as_ref()
-        .unwrap()
-        .scatter(r, &rec, &mut albedo, &mut scattered, &mut pdf_val)
-    {
+    if !rec.mat_ptr.as_ref().unwrap().scatter(r, &rec, &mut srec) {
         return emitted;
     }
 
-    let light_pdf = HittablePDF::new(lights.clone(), &rec.p);
-    let cos_pdf = CosPDF::new(&rec.normal);
-    let mixed_pdf = MixturePDF::new(Arc::new(light_pdf), Arc::new(cos_pdf));
+    if srec.is_specular {
+        return srec.attenuation
+            * ray_color(&srec.specular_ray, background, world, lights, depth - 1);
+    }
 
-    scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time());
-    pdf_val = mixed_pdf.value(&scattered.direction());
+    let light_pdf = HittablePDF::new(lights.clone(), &rec.p);
+    let cos_pdf_ptr = srec.pdf_ptr.clone().unwrap();
+    let mixed_pdf = MixturePDF::new(Arc::new(light_pdf), cos_pdf_ptr);
+
+    let scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time());
+    let pdf_val = mixed_pdf.value(&scattered.direction());
 
     emitted
-        + albedo
+        + srec.attenuation
             * rec
                 .mat_ptr
                 .as_ref()
