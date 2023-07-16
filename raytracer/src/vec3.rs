@@ -120,10 +120,14 @@ impl Vec3 {
     }
 
     pub fn multi_samples_rgb(&self, samples: u32) -> [u8; 3] {
+        let r = if self.x().is_nan() { 0.0 } else { self.x() };
+        let g = if self.y().is_nan() { 0.0 } else { self.y() };
+        let b = if self.z().is_nan() { 0.0 } else { self.z() };
+
         let scale = 1.0 / (samples as f64);
-        let r = scale * self.x();
-        let g = scale * self.y();
-        let b = scale * self.z();
+        let r = scale * r;
+        let g = scale * g;
+        let b = scale * b;
         //adding gamma-correct for gamma = 2
         [
             (255.999 * clamp(r.sqrt(), 0.0, 0.999)) as u8,
