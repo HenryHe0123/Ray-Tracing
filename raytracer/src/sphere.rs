@@ -1,9 +1,11 @@
 use crate::aabb::{surrounding_box, AABB};
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
+use crate::onb::ONB;
 use crate::ray::Ray;
 use crate::vec3::{dot, Point3, Vec3};
 use std::f64::consts::PI;
+use std::f64::INFINITY;
 use std::sync::Arc;
 
 #[derive(Clone)]
@@ -66,6 +68,25 @@ impl Hittable for Sphere {
     fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
         *output_box = AABB::center_radius_new(&self.center, self.radius);
         true
+    }
+
+    fn pdf_value(&self, o: &Point3, v: &Vec3) -> f64 {
+        let mut rec = HitRecord::default();
+        if !self.hit(&Ray::new(o, v, 0.0), 0.001, INFINITY, &mut rec) {
+            return 0.0;
+        }
+
+        let cos_theta_max =
+            (1.0 - self.radius * self.radius / (self.center - *o).length_squared()).sqrt();
+        let solid_angle = 2.0 * PI * (1.0 - cos_theta_max);
+        1.0 / solid_angle
+    }
+
+    fn random(&self, o: &Vec3) -> Vec3 {
+        let direction = self.center - *o;
+        let distance_squared = direction.length_squared();
+        let uvw = ONB::build_from_w(&direction);
+        uvw.local_vec(&Vec3::random_to_sphere(self.radius, distance_squared))
     }
 }
 
