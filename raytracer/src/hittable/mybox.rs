@@ -6,6 +6,7 @@ use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct MyBox {
     pub box_min: Point3,
     pub box_max: Point3,
@@ -13,7 +14,7 @@ pub struct MyBox {
 }
 
 impl MyBox {
-    pub fn new(p0: &Point3, p1: &Point3, p_clone: Arc<dyn Material>) -> Self {
+    pub fn new<M: Material + Clone + 'static>(p0: &Point3, p1: &Point3, material: M) -> Self {
         let mut sides = HittableList::default();
         sides.add(Arc::new(XYRect::new(
             p0.x(),
@@ -21,7 +22,7 @@ impl MyBox {
             p0.y(),
             p1.y(),
             p1.z(),
-            p_clone.clone(),
+            material.clone(),
         )));
         sides.add(Arc::new(XYRect::new(
             p0.x(),
@@ -29,7 +30,7 @@ impl MyBox {
             p0.y(),
             p1.y(),
             p0.z(),
-            p_clone.clone(),
+            material.clone(),
         )));
 
         sides.add(Arc::new(XZRect::new(
@@ -38,7 +39,7 @@ impl MyBox {
             p0.z(),
             p1.z(),
             p1.y(),
-            p_clone.clone(),
+            material.clone(),
         )));
         sides.add(Arc::new(XZRect::new(
             p0.x(),
@@ -46,7 +47,7 @@ impl MyBox {
             p0.z(),
             p1.z(),
             p0.y(),
-            p_clone.clone(),
+            material.clone(),
         )));
         sides.add(Arc::new(YZRect::new(
             p0.y(),
@@ -54,7 +55,7 @@ impl MyBox {
             p0.z(),
             p1.z(),
             p1.x(),
-            p_clone.clone(),
+            material.clone(),
         )));
         sides.add(Arc::new(YZRect::new(
             p0.y(),
@@ -62,7 +63,7 @@ impl MyBox {
             p0.z(),
             p1.z(),
             p0.x(),
-            p_clone,
+            material,
         )));
 
         Self {

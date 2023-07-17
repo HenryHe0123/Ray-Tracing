@@ -4,9 +4,8 @@ use crate::texture::perlin::Perlin;
 use crate::utility::clamp;
 use crate::utility::vec3::*;
 use image::GenericImageView;
-use std::sync::Arc;
 
-pub trait Texture {
+pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
 }
 
@@ -36,37 +35,33 @@ impl Texture for SolidColor {
 }
 
 #[derive(Clone, Default)]
-pub struct CheckerTexture {
-    pub even: Option<Arc<dyn Texture + Send + Sync>>,
-    pub odd: Option<Arc<dyn Texture + Send + Sync>>,
+pub struct CheckerTexture<T1: Texture, T2: Texture> {
+    pub even: T1,
+    pub odd: T2,
 }
 
-impl CheckerTexture {
-    pub fn new(color1: &Color, color2: &Color) -> Self {
-        Self {
-            even: Some(Arc::new(SolidColor::new(color1))),
-            odd: Some(Arc::new(SolidColor::new(color2))),
-        }
+impl<T1: Texture, T2: Texture> CheckerTexture<T1, T2> {
+    pub fn new(even: T1, odd: T2) -> Self {
+        Self { even, odd }
     }
+}
 
-    pub fn new_from_opt(
-        even: &Option<Arc<dyn Texture + Send + Sync>>,
-        odd: &Option<Arc<dyn Texture + Send + Sync>>,
-    ) -> Self {
+impl CheckerTexture<SolidColor, SolidColor> {
+    pub fn new_from_color(color1: &Color, color2: &Color) -> Self {
         Self {
-            even: even.clone(),
-            odd: odd.clone(),
+            even: SolidColor::new(color1),
+            odd: SolidColor::new(color2),
         }
     }
 }
 
-impl Texture for CheckerTexture {
+impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color {
         let sines = (10.0 * p.x()).sin() * (10.0 * p.y()).sin() * (10.0 * p.z()).sin();
         if sines < 0.0 {
-            self.odd.as_ref().unwrap().value(u, v, p)
+            self.odd.value(u, v, p)
         } else {
-            self.even.as_ref().unwrap().value(u, v, p)
+            self.even.value(u, v, p)
         }
     }
 }

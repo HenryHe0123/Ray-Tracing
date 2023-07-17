@@ -5,14 +5,13 @@ use crate::utility::random_double;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::consts::PI;
-use std::sync::Arc;
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct ScatterRecord {
     pub specular_ray: Ray,
     pub is_specular: bool,
     pub attenuation: Color,
-    pub pdf_ptr: Option<Arc<dyn PDF>>,
+    pub pdf_ptr: Option<Box<dyn PDF>>,
 }
 
 pub trait Material: Send + Sync {
@@ -32,36 +31,32 @@ pub trait Material: Send + Sync {
 #[derive(Copy, Clone, Default)]
 pub struct EmptyMaterial {}
 impl Material for EmptyMaterial {}
+pub const DEFAULT_MATERIAL: EmptyMaterial = EmptyMaterial {};
 
 #[derive(Clone, Default)]
-pub struct Lambertian {
-    pub albedo: Option<Arc<dyn Texture + Send + Sync>>,
+pub struct Lambertian<T: Texture> {
+    pub albedo: T,
 }
 
-impl Lambertian {
-    pub fn new(a: &Color) -> Self {
-        //new a solid color
-        Lambertian {
-            albedo: Some(Arc::new(SolidColor::new(a))),
-        }
-    }
-
-    pub fn new_from_ptr(a: &Arc<dyn Texture + Send + Sync>) -> Self {
-        Lambertian {
-            albedo: Some(a.clone()),
-        }
-    }
-
-    pub fn new_from_opt(a: &Option<Arc<dyn Texture + Send + Sync>>) -> Self {
-        Lambertian { albedo: a.clone() }
+impl<T: Texture> Lambertian<T> {
+    pub fn new(a: T) -> Self {
+        Lambertian { albedo: a }
     }
 }
 
-impl Material for Lambertian {
+impl Lambertian<SolidColor> {
+    pub fn new_from_color(color: &Color) -> Self {
+        Lambertian {
+            albedo: SolidColor::new(color),
+        }
+    }
+}
+
+impl<T: Texture> Material for Lambertian<T> {
     fn scatter(&self, _r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         srec.is_specular = false;
-        srec.attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
-        srec.pdf_ptr = Some(Arc::new(CosPDF::new(&rec.normal)));
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
+        srec.pdf_ptr = Some(Box::new(CosPDF::new(&rec.normal)));
         true
     }
 
@@ -149,28 +144,28 @@ fn reflectance(cosine: f64, ref_idx: f64) -> f64 {
 }
 
 #[derive(Clone, Default)]
-pub struct DiffuseLight {
-    emit: Option<Arc<dyn Texture + Send + Sync>>,
+pub struct DiffuseLight<T: Texture> {
+    emit: T,
 }
 
-impl DiffuseLight {
-    pub fn new(c: &Color) -> Self {
-        Self {
-            emit: Some(Arc::new(SolidColor::new(c))),
-        }
-    }
-
-    pub fn new_from_ptr(a: &Arc<dyn Texture + Send + Sync>) -> Self {
-        Self {
-            emit: Some(a.clone()),
-        }
+impl<T: Texture> DiffuseLight<T> {
+    pub fn new(a: T) -> Self {
+        Self { emit: a }
     }
 }
 
-impl Material for DiffuseLight {
+impl DiffuseLight<SolidColor> {
+    pub fn new_from_color(color: &Color) -> Self {
+        Self {
+            emit: SolidColor::new(color),
+        }
+    }
+}
+
+impl<T: Texture> Material for DiffuseLight<T> {
     fn emitted(&self, _r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: &Point3) -> Color {
         if rec.front_face {
-            self.emit.as_ref().unwrap().value(u, v, p)
+            self.emit.value(u, v, p)
         } else {
             Color::default()
         }
@@ -178,29 +173,29 @@ impl Material for DiffuseLight {
 }
 
 #[derive(Clone, Default)]
-pub struct Isotropic {
-    pub albedo: Option<Arc<dyn Texture + Send + Sync>>,
+pub struct Isotropic<T: Texture> {
+    pub albedo: T,
 }
 
-impl Isotropic {
-    pub fn new(c: &Color) -> Self {
-        Self {
-            albedo: Some(Arc::new(SolidColor::new(c))),
-        }
-    }
-
-    pub fn new_from_ptr(a: &Arc<dyn Texture + Send + Sync>) -> Self {
-        Self {
-            albedo: Some(a.clone()),
-        }
+impl<T: Texture> Isotropic<T> {
+    pub fn new(a: T) -> Self {
+        Self { albedo: a }
     }
 }
 
-impl Material for Isotropic {
+impl Isotropic<SolidColor> {
+    pub fn new_from_color(color: &Color) -> Self {
+        Self {
+            albedo: SolidColor::new(color),
+        }
+    }
+}
+
+impl<T: Texture> Material for Isotropic<T> {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, srec: &mut ScatterRecord) -> bool {
         srec.specular_ray = Ray::new(&rec.p, &Vec3::random_in_unit_sphere(), r_in.time());
         srec.is_specular = true;
-        srec.attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
+        srec.attenuation = self.albedo.value(rec.u, rec.v, &rec.p);
         srec.pdf_ptr = None;
         true
     }

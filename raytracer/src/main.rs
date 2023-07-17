@@ -9,7 +9,7 @@ pub mod utility;
 use crate::camera::Camera;
 use crate::hittable::aarect::XZRect;
 use crate::hittable::Hittable;
-use crate::material::{EmptyMaterial, ScatterRecord};
+use crate::material::{ScatterRecord, DEFAULT_MATERIAL};
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::scene::*;
 use crate::utility::random_double;
@@ -24,14 +24,14 @@ use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image22(b2)-6000.jpg");
+    let path = std::path::Path::new("output/book3/image22(b2)-10000.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 1.0;
     let width = 800;
-    let samples_per_pixel: u32 = 6000;
+    let samples_per_pixel: u32 = 10000;
     let max_bounce_depth: i32 = 50;
 
     //World
@@ -40,14 +40,7 @@ fn main() {
 
     //Lights
     //let mut lights = HittableList::default();
-    let lights = XZRect::new(
-        123.,
-        423.,
-        147.,
-        412.,
-        554.,
-        Arc::new(EmptyMaterial::default()),
-    );
+    let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
 
     //Camera
     let lookfrom = Point3::new(478.0, 278.0, -600.0);
@@ -169,12 +162,8 @@ fn ray_color(
     let rec = rec_op.unwrap();
 
     let mut srec = ScatterRecord::default();
-    let emitted = rec
-        .mat_ptr
-        .as_ref()
-        .unwrap()
-        .emitted(r, &rec, rec.u, rec.v, &rec.p);
-    if !rec.mat_ptr.as_ref().unwrap().scatter(r, &rec, &mut srec) {
+    let emitted = rec.mat_ptr.emitted(r, &rec, rec.u, rec.v, &rec.p);
+    if !rec.mat_ptr.scatter(r, &rec, &mut srec) {
         return emitted;
     }
 
@@ -183,20 +172,17 @@ fn ray_color(
             * ray_color(&srec.specular_ray, background, world, lights, depth - 1);
     }
 
-    let light_pdf = HittablePDF::new(lights.clone(), &rec.p);
-    let cos_pdf_ptr = srec.pdf_ptr.clone().unwrap();
-    let mixed_pdf = MixturePDF::new(Arc::new(light_pdf), cos_pdf_ptr);
+    let light_pdf = HittablePDF::new(lights.as_ref(), &rec.p);
+    let cos_pdf_box = srec.pdf_ptr.unwrap();
+    let cos_pdf_ptr = cos_pdf_box.as_ref();
+    let mixed_pdf = MixturePDF::new(&light_pdf, cos_pdf_ptr);
 
     let scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time());
     let pdf_val = mixed_pdf.value(&scattered.direction());
 
     emitted
         + srec.attenuation
-            * rec
-                .mat_ptr
-                .as_ref()
-                .unwrap()
-                .scattering_pdf(r, &rec, &scattered)
+            * rec.mat_ptr.scattering_pdf(r, &rec, &scattered)
             * ray_color(&scattered, background, world, lights, depth - 1)
             / pdf_val
 }

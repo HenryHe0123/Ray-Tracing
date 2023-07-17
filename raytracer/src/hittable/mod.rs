@@ -5,26 +5,26 @@ pub mod mybox;
 pub mod sphere;
 
 use crate::hittable::bvh::aabb::{surrounding_box, AABB};
-use crate::material::Material;
+use crate::material::{Material, DEFAULT_MATERIAL};
 use crate::utility::random_int_range;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::INFINITY;
 use std::sync::Arc;
 
-#[derive(Clone, Default)]
-pub struct HitRecord {
+#[derive(Clone)]
+pub struct HitRecord<'a> {
     pub p: Point3,    //hit point
     pub normal: Vec3, //normal against ray direction
     pub t: f64,       //optical distance
     pub u: f64,
     pub v: f64,           //surface coordinates
     pub front_face: bool, //if ray hit to the front face
-    pub mat_ptr: Option<Arc<dyn Material>>,
+    pub mat_ptr: &'a dyn Material,
 }
 
-impl HitRecord {
-    pub fn new(p_clone: Arc<dyn Material>) -> Self {
+impl<'a> HitRecord<'a> {
+    pub fn new(mat_ptr: &'a dyn Material) -> Self {
         HitRecord {
             p: Point3::default(),
             normal: Vec3::default(),
@@ -32,7 +32,7 @@ impl HitRecord {
             u: 0.0,
             v: 0.0,
             front_face: false,
-            mat_ptr: Some(p_clone),
+            mat_ptr,
         }
     }
 
@@ -43,6 +43,12 @@ impl HitRecord {
         } else {
             -*outward_normal
         };
+    }
+}
+
+impl<'a> Default for HitRecord<'a> {
+    fn default() -> Self {
+        Self::new(&DEFAULT_MATERIAL)
     }
 }
 

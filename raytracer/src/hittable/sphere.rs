@@ -6,40 +6,38 @@ use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::consts::PI;
 use std::f64::INFINITY;
-use std::sync::Arc;
 
-#[derive(Clone)]
-pub struct Sphere {
-    pub center: Point3,
-    pub radius: f64,
-    pub mat_ptr: Arc<dyn Material>,
+pub fn get_sphere_uv(p: &Point3, u: &mut f64, v: &mut f64) {
+    // p: a given point on the sphere of radius one, centered at the origin.
+    // u: returned value [0,1] of angle around the Y axis from X=-1.
+    // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+    //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+    //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+    //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+    let theta = (-p.y()).acos();
+    let phi = f64::atan2(-p.z(), p.x()) + PI;
+    *u = phi / (2.0 * PI);
+    *v = theta / PI;
 }
 
-impl Sphere {
-    pub fn new(cen: &Vec3, r: f64, p_clone: Arc<dyn Material>) -> Self {
+#[derive(Clone)]
+pub struct Sphere<M: Material> {
+    pub center: Point3,
+    pub radius: f64,
+    pub mat_ptr: M,
+}
+
+impl<M: Material> Sphere<M> {
+    pub fn new(cen: &Vec3, r: f64, material: M) -> Self {
         Sphere {
             center: *cen,
             radius: r,
-            mat_ptr: p_clone,
+            mat_ptr: material,
         }
-    }
-
-    fn get_sphere_uv(p: &Point3, u: &mut f64, v: &mut f64) {
-        // p: a given point on the sphere of radius one, centered at the origin.
-        // u: returned value [0,1] of angle around the Y axis from X=-1.
-        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
-        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
-        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
-        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
-
-        let theta = (-p.y()).acos();
-        let phi = f64::atan2(-p.z(), p.x()) + PI;
-        *u = phi / (2.0 * PI);
-        *v = theta / PI;
     }
 }
 
-impl Hittable for Sphere {
+impl<M: Material> Hittable for Sphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center;
         let a = r.direction().length_squared();
@@ -63,11 +61,11 @@ impl Hittable for Sphere {
             u: 0.0,
             v: 0.0,
             front_face: false,
-            mat_ptr: Some(Arc::clone(&self.mat_ptr)),
+            mat_ptr: &self.mat_ptr,
         };
         let outward_normal = (rec.p - self.center) / self.radius;
         rec.set_face_normal(r, &outward_normal);
-        Sphere::get_sphere_uv(&outward_normal, &mut rec.u, &mut rec.v);
+        get_sphere_uv(&outward_normal, &mut rec.u, &mut rec.v);
         Some(rec)
     }
 
@@ -96,31 +94,24 @@ impl Hittable for Sphere {
 }
 
 #[derive(Clone)]
-pub struct MovingSphere {
+pub struct MovingSphere<M: Material> {
     pub center0: Point3,
     pub center1: Point3,
     pub radius: f64,
     pub time0: f64,
     pub time1: f64,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: M,
 }
 
-impl MovingSphere {
-    pub fn new(
-        cen0: &Vec3,
-        cen1: &Vec3,
-        r: f64,
-        time0: f64,
-        time1: f64,
-        p_clone: Arc<dyn Material>,
-    ) -> Self {
+impl<M: Material> MovingSphere<M> {
+    pub fn new(cen0: &Vec3, cen1: &Vec3, r: f64, time0: f64, time1: f64, material: M) -> Self {
         MovingSphere {
             center0: *cen0,
             center1: *cen1,
             radius: r,
             time0,
             time1,
-            mat_ptr: p_clone,
+            mat_ptr: material,
         }
     }
 
@@ -130,7 +121,7 @@ impl MovingSphere {
     }
 }
 
-impl Hittable for MovingSphere {
+impl<M: Material> Hittable for MovingSphere<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin() - self.center(r.time());
         let a = r.direction().length_squared();
@@ -154,7 +145,7 @@ impl Hittable for MovingSphere {
             u: 0.0,
             v: 0.0,
             front_face: false,
-            mat_ptr: Some(Arc::clone(&self.mat_ptr)),
+            mat_ptr: &self.mat_ptr,
         };
         let outward_normal = (rec.p - self.center(r.time())) / self.radius;
         rec.set_face_normal(r, &outward_normal);

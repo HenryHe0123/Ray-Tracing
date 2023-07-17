@@ -5,11 +5,10 @@ use crate::utility::random_double_range;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::INFINITY;
-use std::sync::Arc;
 
 #[derive(Clone, Default)]
-pub struct XYRect {
-    mp: Option<Arc<dyn Material>>,
+pub struct XYRect<M: Material> {
+    mp: M,
     x0: f64,
     x1: f64,
     y0: f64,
@@ -17,20 +16,20 @@ pub struct XYRect {
     k: f64, //z = k
 }
 
-impl XYRect {
-    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, p_clone: Arc<dyn Material>) -> Self {
+impl<M: Material> XYRect<M> {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, material: M) -> Self {
         Self {
             x0,
             x1,
             y0,
             y1,
             k,
-            mp: Some(p_clone),
+            mp: material,
         }
     }
 }
 
-impl Hittable for XYRect {
+impl<M: Material> Hittable for XYRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().z()) / r.direction().z();
         if t < t_min || t > t_max {
@@ -48,7 +47,7 @@ impl Hittable for XYRect {
             u: (x - self.x0) / (self.x1 - self.x0),
             v: (y - self.y0) / (self.y1 - self.y0),
             front_face: false,
-            mat_ptr: self.mp.clone(),
+            mat_ptr: &self.mp,
         };
         let outward_normal = Vec3::new(0.0, 0.0, 1.0);
         rec.set_face_normal(r, &outward_normal);
@@ -65,8 +64,8 @@ impl Hittable for XYRect {
 }
 
 #[derive(Clone, Default)]
-pub struct XZRect {
-    mp: Option<Arc<dyn Material>>,
+pub struct XZRect<M: Material> {
+    mp: M,
     x0: f64,
     x1: f64,
     z0: f64,
@@ -74,20 +73,20 @@ pub struct XZRect {
     k: f64, //y = k
 }
 
-impl XZRect {
-    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, p_clone: Arc<dyn Material>) -> Self {
+impl<M: Material> XZRect<M> {
+    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, material: M) -> Self {
         Self {
             x0,
             x1,
             z0,
             z1,
             k,
-            mp: Some(p_clone),
+            mp: material,
         }
     }
 }
 
-impl Hittable for XZRect {
+impl<M: Material> Hittable for XZRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().y()) / r.direction().y();
         if t < t_min || t > t_max {
@@ -105,7 +104,7 @@ impl Hittable for XZRect {
             u: (x - self.x0) / (self.x1 - self.x0),
             v: (z - self.z0) / (self.z1 - self.z0),
             front_face: false,
-            mat_ptr: self.mp.clone(),
+            mat_ptr: &self.mp,
         };
         let outward_normal = Vec3::new(0.0, 1.0, 0.0);
         rec.set_face_normal(r, &outward_normal);
@@ -143,8 +142,8 @@ impl Hittable for XZRect {
 }
 
 #[derive(Clone, Default)]
-pub struct YZRect {
-    mp: Option<Arc<dyn Material>>,
+pub struct YZRect<M: Material> {
+    mp: M,
     y0: f64,
     y1: f64,
     z0: f64,
@@ -152,20 +151,20 @@ pub struct YZRect {
     k: f64, //x = k
 }
 
-impl YZRect {
-    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, p_clone: Arc<dyn Material>) -> Self {
+impl<M: Material> YZRect<M> {
+    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, material: M) -> Self {
         Self {
             y0,
             y1,
             z0,
             z1,
             k,
-            mp: Some(p_clone),
+            mp: material,
         }
     }
 }
 
-impl Hittable for YZRect {
+impl<M: Material> Hittable for YZRect<M> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().x()) / r.direction().x();
         if t < t_min || t > t_max {
@@ -183,7 +182,7 @@ impl Hittable for YZRect {
             u: (y - self.y0) / (self.y1 - self.y0),
             v: (z - self.z0) / (self.z1 - self.z0),
             front_face: false,
-            mat_ptr: self.mp.clone(),
+            mat_ptr: &self.mp,
         };
         let outward_normal = Vec3::new(1.0, 0.0, 0.0);
         rec.set_face_normal(r, &outward_normal);

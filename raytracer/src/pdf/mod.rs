@@ -5,7 +5,6 @@ use crate::pdf::onb::ONB;
 use crate::utility::random_double;
 use crate::utility::vec3::*;
 use std::f64::consts::PI;
-use std::sync::Arc;
 
 pub trait PDF {
     fn value(&self, direction: &Vec3) -> f64;
@@ -40,55 +39,49 @@ impl PDF for CosPDF {
     }
 }
 
-#[derive(Clone, Default)]
-pub struct HittablePDF {
+#[derive(Clone)]
+pub struct HittablePDF<'a> {
     o: Point3,
-    ptr: Option<Arc<dyn Hittable>>,
+    ptr: &'a dyn Hittable,
 }
 
-impl HittablePDF {
-    pub fn new(p_clone: Arc<dyn Hittable>, origin: &Point3) -> Self {
-        Self {
-            o: *origin,
-            ptr: Some(p_clone),
-        }
+impl<'a> HittablePDF<'a> {
+    pub fn new(ptr: &'a dyn Hittable, origin: &Point3) -> Self {
+        Self { o: *origin, ptr }
     }
 }
 
-impl PDF for HittablePDF {
+impl<'a> PDF for HittablePDF<'a> {
     fn value(&self, direction: &Vec3) -> f64 {
-        self.ptr.as_ref().unwrap().pdf_value(&self.o, direction)
+        self.ptr.pdf_value(&self.o, direction)
     }
 
     fn generate(&self) -> Vec3 {
-        self.ptr.as_ref().unwrap().random(&self.o)
+        self.ptr.random(&self.o)
     }
 }
 
-#[derive(Clone, Default)]
-pub struct MixturePDF {
-    p: [Option<Arc<dyn PDF>>; 2],
+#[derive(Clone)]
+pub struct MixturePDF<'a> {
+    p: [&'a dyn PDF; 2],
 }
 
-impl MixturePDF {
-    pub fn new(p0: Arc<dyn PDF>, p1: Arc<dyn PDF>) -> Self {
-        Self {
-            p: [Some(p0), Some(p1)],
-        }
+impl<'a> MixturePDF<'a> {
+    pub fn new(p0: &'a dyn PDF, p1: &'a dyn PDF) -> Self {
+        Self { p: [p0, p1] }
     }
 }
 
-impl PDF for MixturePDF {
+impl<'a> PDF for MixturePDF<'a> {
     fn value(&self, direction: &Vec3) -> f64 {
-        0.5 * (self.p[0].as_ref().unwrap().value(direction)
-            + self.p[1].as_ref().unwrap().value(direction))
+        0.5 * (self.p[0].value(direction) + self.p[1].value(direction))
     }
 
     fn generate(&self) -> Vec3 {
         if random_double() < 0.5 {
-            self.p[0].as_ref().unwrap().generate()
+            self.p[0].generate()
         } else {
-            self.p[1].as_ref().unwrap().generate()
+            self.p[1].generate()
         }
     }
 }
