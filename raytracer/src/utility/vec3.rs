@@ -1,4 +1,4 @@
-use crate::rt_weekend::{clamp, random_double, random_double_range};
+use crate::utility::{clamp, random_double, random_double_range};
 use std::f64::consts::PI;
 use std::fmt;
 use std::ops::{Add, Div, Index, IndexMut, Mul, Sub};

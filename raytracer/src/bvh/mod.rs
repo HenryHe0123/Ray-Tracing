@@ -1,7 +1,9 @@
-use crate::aabb::{surrounding_box, AABB};
+pub mod aabb;
+
 use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::ray::Ray;
-use crate::rt_weekend::random_int_range;
+use crate::utility::random_int_range;
+use aabb::{surrounding_box, AABB};
 use std::cmp::Ordering;
 use std::sync::Arc;
 

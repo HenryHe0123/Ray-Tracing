@@ -1,7 +1,7 @@
 use crate::hittable::Hittable;
 use crate::onb::ONB;
-use crate::rt_weekend::random_double;
-use crate::vec3::{dot, Point3, Vec3};
+use crate::utility::random_double;
+use crate::utility::vec3::*;
 use std::f64::consts::PI;
 use std::sync::Arc;
 

@@ -1,5 +1,5 @@
-use crate::rt_weekend::random_int_range;
-use crate::vec3::{dot, Point3, Vec3};
+use crate::utility::random_int_range;
+use crate::utility::vec3::*;
 
 #[derive(Clone)]
 pub struct Perlin {

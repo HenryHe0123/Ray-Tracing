@@ -1,5 +1,5 @@
 use crate::ray::Ray;
-use crate::vec3::Point3;
+use crate::utility::vec3::*;
 
 #[derive(Debug, Copy, Clone, Default)]
 pub struct AABB {

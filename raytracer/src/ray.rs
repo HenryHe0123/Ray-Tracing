@@ -1,7 +1,7 @@
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::ScatterRecord;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
-use crate::vec3::{Color, Point3, Vec3};
+use crate::utility::vec3::*;
 use std::f64::INFINITY;
 use std::sync::Arc;
 

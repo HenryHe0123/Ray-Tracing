@@ -1,6 +1,6 @@
 use crate::ray::Ray;
-use crate::rt_weekend::random_double_range;
-use crate::vec3::{cross, Point3, Vec3};
+use crate::utility::random_double_range;
+use crate::utility::vec3::*;
 use std::f64;
 
 #[derive(Debug, Copy, Clone)]

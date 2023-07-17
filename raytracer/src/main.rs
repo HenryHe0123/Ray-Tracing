@@ -1,4 +1,3 @@
-pub mod aabb;
 pub mod aarect;
 pub mod bvh;
 pub mod camera;
@@ -10,27 +9,25 @@ pub mod onb;
 pub mod pdf;
 pub mod perlin;
 pub mod ray;
-pub mod rt_weekend;
 pub mod scene;
 pub mod sphere;
 pub mod texture;
-pub mod vec3;
+pub mod utility;
 
 use crate::aarect::XZRect;
 use crate::camera::Camera;
 use crate::hittable::Hittable;
 use crate::material::EmptyMaterial;
 use crate::ray::ray_color;
-use crate::rt_weekend::random_double;
 use crate::scene::*;
-use crate::vec3::Vec3;
+use crate::utility::random_double;
+use crate::utility::vec3::*;
 use console::style;
 use image::{ImageBuffer, RgbImage};
 use indicatif::{MultiProgress, ProgressBar};
 use rand::seq::SliceRandom;
 use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
-use vec3::{Color, Point3};
 
 fn main() {
     let path = std::path::Path::new("output/book3/image22(b2)-2500.jpg");

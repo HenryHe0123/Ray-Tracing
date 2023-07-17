@@ -4,10 +4,10 @@ use crate::constant_medium::ConstantMedium;
 use crate::hittable::{HittableList, RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, FlipFace, Lambertian, Metal};
 use crate::mybox::MyBox;
-use crate::rt_weekend::{random_double, random_double_range};
 use crate::sphere::{MovingSphere, Sphere};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, Texture};
-use crate::vec3::{Color, Point3, Vec3};
+use crate::utility::vec3::*;
+use crate::utility::{random_double, random_double_range};
 use std::sync::Arc;
 
 pub fn random_scene() -> HittableList {

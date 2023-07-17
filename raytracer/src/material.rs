@@ -1,10 +1,10 @@
-use crate::aabb::AABB;
+use crate::bvh::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::pdf::{CosPDF, PDF};
 use crate::ray::Ray;
-use crate::rt_weekend::random_double;
 use crate::texture::{SolidColor, Texture};
-use crate::vec3::{dot, reflect, refract, Color, Point3, Vec3};
+use crate::utility::random_double;
+use crate::utility::vec3::*;
 use std::f64::consts::PI;
 use std::sync::Arc;
 

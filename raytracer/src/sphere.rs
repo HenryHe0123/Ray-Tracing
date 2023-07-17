@@ -1,9 +1,9 @@
-use crate::aabb::{surrounding_box, AABB};
+use crate::bvh::aabb::{surrounding_box, AABB};
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::onb::ONB;
 use crate::ray::Ray;
-use crate::vec3::{dot, Point3, Vec3};
+use crate::utility::vec3::*;
 use std::f64::consts::PI;
 use std::f64::INFINITY;
 use std::sync::Arc;

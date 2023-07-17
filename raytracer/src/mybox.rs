@@ -1,9 +1,9 @@
-use crate::aabb::AABB;
 use crate::aarect::{XYRect, XZRect, YZRect};
+use crate::bvh::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::material::Material;
 use crate::ray::Ray;
-use crate::vec3::Point3;
+use crate::utility::vec3::*;
 use std::sync::Arc;
 
 pub struct MyBox {

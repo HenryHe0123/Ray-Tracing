@@ -1,4 +1,4 @@
-use crate::vec3::{cross, Vec3};
+use crate::utility::vec3::*;
 use std::ops::Index;
 
 #[derive(Copy, Clone, Default)]

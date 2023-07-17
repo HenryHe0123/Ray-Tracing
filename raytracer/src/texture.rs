@@ -1,6 +1,6 @@
 use crate::perlin::Perlin;
-use crate::rt_weekend::clamp;
-use crate::vec3::{Color, Point3};
+use crate::utility::clamp;
+use crate::utility::vec3::*;
 use image::GenericImageView;
 use std::sync::Arc;
 
