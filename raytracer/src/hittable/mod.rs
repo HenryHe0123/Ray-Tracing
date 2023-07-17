@@ -1,12 +1,13 @@
 pub mod aarect;
+pub mod bvh;
 pub mod constant_medium;
 pub mod mybox;
 pub mod sphere;
 
-use crate::bvh::aabb::{surrounding_box, AABB};
+use crate::hittable::bvh::aabb::{surrounding_box, AABB};
 use crate::material::Material;
-use crate::ray::Ray;
 use crate::utility::random_int_range;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::INFINITY;
 use std::sync::Arc;

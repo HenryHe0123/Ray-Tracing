@@ -1,5 +1,5 @@
-use crate::ray::Ray;
 use crate::utility::random_double_range;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64;
 

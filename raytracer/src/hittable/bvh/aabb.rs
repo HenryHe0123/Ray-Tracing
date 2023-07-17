@@ -1,4 +1,4 @@
-use crate::ray::Ray;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 
 #[derive(Debug, Copy, Clone, Default)]

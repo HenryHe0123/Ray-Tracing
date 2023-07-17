@@ -1,8 +1,8 @@
-use crate::bvh::aabb::AABB;
+use crate::hittable::bvh::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
-use crate::ray::Ray;
 use crate::utility::random_double_range;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::INFINITY;
 use std::sync::Arc;

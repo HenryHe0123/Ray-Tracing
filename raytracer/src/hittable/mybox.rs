@@ -1,8 +1,8 @@
-use crate::bvh::aabb::AABB;
 use crate::hittable::aarect::*;
+use crate::hittable::bvh::aabb::AABB;
 use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::material::Material;
-use crate::ray::Ray;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::sync::Arc;
 

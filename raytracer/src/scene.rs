@@ -1,5 +1,5 @@
-use crate::bvh::BVHNode;
 use crate::hittable::aarect::*;
+use crate::hittable::bvh::BVHNode;
 use crate::hittable::constant_medium::*;
 use crate::hittable::mybox::*;
 use crate::hittable::sphere::*;

@@ -1,8 +1,8 @@
 use crate::hittable::HitRecord;
 use crate::pdf::{CosPDF, PDF};
-use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
 use crate::utility::random_double;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::consts::PI;
 use std::sync::Arc;

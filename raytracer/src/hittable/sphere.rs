@@ -1,8 +1,8 @@
-use crate::bvh::aabb::{surrounding_box, AABB};
+use crate::hittable::bvh::aabb::{surrounding_box, AABB};
 use crate::hittable::{HitRecord, Hittable};
 use crate::material::Material;
 use crate::pdf::onb::ONB;
-use crate::ray::Ray;
+use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::consts::PI;
 use std::f64::INFINITY;

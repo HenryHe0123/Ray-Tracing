@@ -1,8 +1,8 @@
 pub mod aabb;
 
 use crate::hittable::{HitRecord, Hittable, HittableList};
-use crate::ray::Ray;
 use crate::utility::random_int_range;
+use crate::utility::ray::Ray;
 use aabb::{surrounding_box, AABB};
 use std::cmp::Ordering;
 use std::sync::Arc;
