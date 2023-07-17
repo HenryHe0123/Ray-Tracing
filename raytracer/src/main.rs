@@ -1,21 +1,15 @@
-pub mod aarect;
 pub mod bvh;
 pub mod camera;
-pub mod constant_medium;
 pub mod hittable;
 pub mod material;
-pub mod mybox;
-pub mod onb;
 pub mod pdf;
-pub mod perlin;
 pub mod ray;
 pub mod scene;
-pub mod sphere;
 pub mod texture;
 pub mod utility;
 
-use crate::aarect::XZRect;
 use crate::camera::Camera;
+use crate::hittable::aarect::XZRect;
 use crate::hittable::Hittable;
 use crate::material::EmptyMaterial;
 use crate::ray::ray_color;
@@ -30,14 +24,14 @@ use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image22(b2)-2500.jpg");
+    let path = std::path::Path::new("output/book3/image22(b2)-6000.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 1.0;
     let width = 800;
-    let samples_per_pixel: u32 = 2500;
+    let samples_per_pixel: u32 = 6000;
     let max_bounce_depth: i32 = 50;
 
     //World
@@ -82,7 +76,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     //Multi Threads
-    let threads_number: usize = 10;
+    let threads_number: usize = 3;
     let shuffle: bool = true;
 
     let multi_progress = MultiProgress::new();

@@ -1,5 +1,5 @@
-use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::bvh::aabb::AABB;
+use crate::hittable::aarect::*;
 use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::material::Material;
 use crate::ray::Ray;

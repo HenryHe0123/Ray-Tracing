@@ -1,4 +1,6 @@
-use crate::perlin::Perlin;
+pub mod perlin;
+
+use crate::texture::perlin::Perlin;
 use crate::utility::clamp;
 use crate::utility::vec3::*;
 use image::GenericImageView;

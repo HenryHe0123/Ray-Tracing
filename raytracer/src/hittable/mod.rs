@@ -1,3 +1,8 @@
+pub mod aarect;
+pub mod constant_medium;
+pub mod mybox;
+pub mod sphere;
+
 use crate::bvh::aabb::{surrounding_box, AABB};
 use crate::material::Material;
 use crate::ray::Ray;

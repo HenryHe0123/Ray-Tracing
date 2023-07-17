@@ -1,5 +1,7 @@
+pub mod onb;
+
 use crate::hittable::Hittable;
-use crate::onb::ONB;
+use crate::pdf::onb::ONB;
 use crate::utility::random_double;
 use crate::utility::vec3::*;
 use std::f64::consts::PI;

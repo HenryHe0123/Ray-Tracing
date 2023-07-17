@@ -1,10 +1,10 @@
-use crate::aarect::{XYRect, XZRect, YZRect};
 use crate::bvh::BVHNode;
-use crate::constant_medium::ConstantMedium;
+use crate::hittable::aarect::*;
+use crate::hittable::constant_medium::*;
+use crate::hittable::mybox::*;
+use crate::hittable::sphere::*;
 use crate::hittable::{HittableList, RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, FlipFace, Lambertian, Metal};
-use crate::mybox::MyBox;
-use crate::sphere::{MovingSphere, Sphere};
 use crate::texture::{CheckerTexture, ImageTexture, NoiseTexture, Texture};
 use crate::utility::vec3::*;
 use crate::utility::{random_double, random_double_range};
