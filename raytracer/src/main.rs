@@ -18,7 +18,7 @@ use crate::utility::random_double;
 use crate::utility::vec3::*;
 use console::style;
 use image::{ImageBuffer, RgbImage};
-use indicatif::{MultiProgress, ProgressBar};
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use rand::seq::SliceRandom;
 use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
@@ -76,26 +76,28 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     //Multi Threads
-    let threads_number: usize = 3;
+    let threads_number: usize = 10;
     let shuffle: bool = true;
 
-    let multi_progress = MultiProgress::new();
+    let multi_progress_bar = MultiProgress::new();
     let (pixel_list, pixels_per_thread) = pixel_allocate(width, height, threads_number, shuffle);
     let mut threads = Vec::new();
     let mut recv = Vec::new();
 
     let world = Arc::new(world);
 
-    for (k, pixels) in pixel_list.iter().enumerate() {
+    for (_k, pixels) in pixel_list.iter().enumerate() {
         let (tx, rx) = mpsc::channel();
         recv.push(rx);
-        //let world = world.clone();
-        let world = Arc::clone(&world);
+        let mut pixel_color_list = Vec::new(); //for channel sending
+        let world = world.clone();
         let camera = camera;
         let pixels = pixels.clone();
         let lights = Arc::new(lights.clone()) as Arc<dyn Hittable>;
-        let pb = multi_progress.add(ProgressBar::new(pixels_per_thread));
-        pb.set_prefix(format!("Process {}", k));
+        let pb = multi_progress_bar.add(ProgressBar::new(pixels_per_thread));
+        pb.set_style(ProgressStyle::default_bar()
+            .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] [{pos}/{len}] ({eta})")
+            .progress_chars("#>-"));
         let handle = thread::spawn(move || {
             for pixel in pixels {
                 let mut pixel_color = Color::default();
@@ -107,26 +109,24 @@ fn main() {
                     pixel_color +=
                         ray_color(&r, &background, world.as_ref(), &lights, max_bounce_depth);
                 }
-                tx.send((pixel, pixel_color)).unwrap();
+                pixel_color_list.push((pixel, pixel_color));
                 pb.inc(1);
             }
+            tx.send(pixel_color_list).unwrap();
             pb.finish();
         });
         threads.push(handle);
     }
 
     if option_env!("CI").unwrap_or_default() != "true" {
-        multi_progress.join_and_clear().unwrap();
+        multi_progress_bar.join_and_clear().unwrap();
     }
 
-    for _k in 0..pixels_per_thread {
-        for receiver in &recv {
-            if let Ok(((i, j), pixel_color)) = receiver.recv() {
-                let pixel = img.get_pixel_mut(i, j);
-                *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
-            } else {
-                continue;
-            }
+    for receiver in &recv {
+        let pixel_color_list = receiver.recv().unwrap();
+        for ((i, j), pixel_color) in pixel_color_list {
+            let pixel = img.get_pixel_mut(i, j);
+            *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
         }
     }
 
