@@ -1,5 +1,4 @@
-use crate::bvh::aabb::AABB;
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::HitRecord;
 use crate::pdf::{CosPDF, PDF};
 use crate::ray::Ray;
 use crate::texture::{SolidColor, Texture};
@@ -204,33 +203,5 @@ impl Material for Isotropic {
         srec.attenuation = self.albedo.as_ref().unwrap().value(rec.u, rec.v, &rec.p);
         srec.pdf_ptr = None;
         true
-    }
-}
-
-#[derive(Clone, Default)]
-pub struct FlipFace {
-    pub ptr: Option<Arc<dyn Hittable + Send + Sync>>,
-}
-
-impl FlipFace {
-    pub fn new(p_clone: Arc<dyn Hittable + Send + Sync>) -> Self {
-        Self { ptr: Some(p_clone) }
-    }
-}
-
-impl Hittable for FlipFace {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
-        if !self.ptr.as_ref().unwrap().hit(r, t_min, t_max, rec) {
-            return false;
-        }
-        rec.front_face = !rec.front_face;
-        true
-    }
-
-    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
-        self.ptr
-            .as_ref()
-            .unwrap()
-            .bounding_box(time0, time1, output_box)
     }
 }

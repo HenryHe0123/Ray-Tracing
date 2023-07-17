@@ -38,31 +38,22 @@ impl ConstantMedium {
 }
 
 impl Hittable for ConstantMedium {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         // Print occasional samples when debugging. To enable, set enable_debug true.
         let enable_debug: bool = false;
         let debugging: bool = enable_debug && random_double() < 0.00001;
 
-        let mut rec1 = HitRecord::default();
-        let mut rec2 = HitRecord::default();
+        let op1 = self.boundary.as_ref().unwrap().hit(r, -INFINITY, INFINITY);
+        op1.as_ref()?;
+        let mut rec1 = op1.unwrap();
 
-        if !self
+        let op2 = self
             .boundary
             .as_ref()
             .unwrap()
-            .hit(r, -INFINITY, INFINITY, &mut rec1)
-        {
-            return false;
-        }
-
-        if !self
-            .boundary
-            .as_ref()
-            .unwrap()
-            .hit(r, rec1.t + 0.0001, INFINITY, &mut rec2)
-        {
-            return false;
-        }
+            .hit(r, rec1.t + 0.0001, INFINITY);
+        op2.as_ref()?;
+        let mut rec2 = op2.unwrap();
 
         if debugging {
             println!("\nt_min = {}, t_max = {}\n", rec1.t, rec2.t);
@@ -72,7 +63,7 @@ impl Hittable for ConstantMedium {
         rec2.t = rec2.t.min(t_max);
 
         if rec1.t >= rec2.t {
-            return false;
+            return None;
         }
         rec1.t = rec1.t.max(0.0);
 
@@ -81,9 +72,10 @@ impl Hittable for ConstantMedium {
         let hit_distance = self.neg_inv_density * random_double().ln();
 
         if hit_distance > distance_inside_boundary {
-            return false;
+            return None;
         }
 
+        let mut rec = HitRecord::default();
         rec.t = rec1.t + hit_distance / ray_length;
         rec.p = r.at(rec.t);
 
@@ -98,7 +90,7 @@ impl Hittable for ConstantMedium {
         rec.front_face = true; // also arbitrary
         rec.mat_ptr = self.phase_function.clone();
 
-        true
+        Some(rec)
     }
 
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {

@@ -46,7 +46,7 @@ impl HitRecord {
 }
 
 pub trait Hittable: Send + Sync {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool;
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool;
     fn pdf_value(&self, _o: &Point3, _v: &Vec3) -> f64 {
         0.0
@@ -78,19 +78,24 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut temp_rec = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
 
         for object in &self.objects {
-            if object.hit(r, t_min, closest_so_far, &mut temp_rec) {
+            if let Some(rec) = object.hit(r, t_min, closest_so_far) {
+                temp_rec = rec;
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                *rec = temp_rec.clone();
             }
         }
-        hit_anything
+
+        if hit_anything {
+            Some(temp_rec)
+        } else {
+            None
+        }
     }
 
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
@@ -143,15 +148,15 @@ pub struct Translate {
 }
 
 impl Hittable for Translate {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray::new(&(r.origin() - self.offset), &r.direction(), r.time());
-        if !self.ptr.as_ref().unwrap().hit(&moved_r, t_min, t_max, rec) {
-            return false;
+        if let Some(mut rec) = self.ptr.as_ref().unwrap().hit(&moved_r, t_min, t_max) {
+            rec.p += self.offset;
+            let normal = rec.normal;
+            rec.set_face_normal(&moved_r, &normal);
+            return Some(rec);
         }
-        rec.p += self.offset;
-        let normal = rec.normal;
-        rec.set_face_normal(&moved_r, &normal);
-        true
+        None
     }
 
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
@@ -191,7 +196,7 @@ pub struct RotateY {
 }
 
 impl Hittable for RotateY {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut origin = r.origin();
         let mut direction = r.direction();
 
@@ -203,28 +208,22 @@ impl Hittable for RotateY {
 
         let rotated_r = Ray::new(&origin, &direction, r.time());
 
-        if !self
-            .ptr
-            .as_ref()
-            .unwrap()
-            .hit(&rotated_r, t_min, t_max, rec)
-        {
-            return false;
+        if let Some(mut rec) = self.ptr.as_ref().unwrap().hit(&rotated_r, t_min, t_max) {
+            let mut p = rec.p;
+            let mut normal = rec.normal;
+
+            p[0] = self.cos_theta * rec.p[0] + self.sin_theta * rec.p[2];
+            p[2] = -self.sin_theta * rec.p[0] + self.cos_theta * rec.p[2];
+
+            normal[0] = self.cos_theta * rec.normal[0] + self.sin_theta * rec.normal[2];
+            normal[2] = -self.sin_theta * rec.normal[0] + self.cos_theta * rec.normal[2];
+
+            rec.p = p;
+            rec.set_face_normal(&rotated_r, &normal);
+            return Some(rec);
         }
 
-        let mut p = rec.p;
-        let mut normal = rec.normal;
-
-        p[0] = self.cos_theta * rec.p[0] + self.sin_theta * rec.p[2];
-        p[2] = -self.sin_theta * rec.p[0] + self.cos_theta * rec.p[2];
-
-        normal[0] = self.cos_theta * rec.normal[0] + self.sin_theta * rec.normal[2];
-        normal[2] = -self.sin_theta * rec.normal[0] + self.cos_theta * rec.normal[2];
-
-        rec.p = p;
-        rec.set_face_normal(&rotated_r, &normal);
-
-        true
+        None
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
@@ -269,5 +268,33 @@ impl RotateY {
             hasbox,
             bbox,
         }
+    }
+}
+
+#[derive(Clone, Default)]
+pub struct FlipFace {
+    pub ptr: Option<Arc<dyn Hittable + Send + Sync>>,
+}
+
+impl FlipFace {
+    pub fn new(p_clone: Arc<dyn Hittable + Send + Sync>) -> Self {
+        Self { ptr: Some(p_clone) }
+    }
+}
+
+impl Hittable for FlipFace {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let op = self.ptr.as_ref().unwrap().hit(r, t_min, t_max);
+        op.as_ref()?;
+        let mut rec = op.unwrap();
+        rec.front_face = !rec.front_face;
+        Some(rec)
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
+        self.ptr
+            .as_ref()
+            .unwrap()
+            .bounding_box(time0, time1, output_box)
     }
 }

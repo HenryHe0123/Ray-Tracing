@@ -1,4 +1,4 @@
-use crate::hittable::{HitRecord, Hittable};
+use crate::hittable::Hittable;
 use crate::material::ScatterRecord;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::utility::vec3::*;
@@ -49,10 +49,12 @@ pub fn ray_color(
         // If we've exceeded the ray bounce limit, no more light is gathered.
         return Color::default();
     }
-    let mut rec = HitRecord::default();
-    if !world.hit(r, 0.001, INFINITY, &mut rec) {
-        return *background; // If the ray hits nothing, return the background color.
+    let rec_op = world.hit(r, 0.001, INFINITY);
+    if rec_op.is_none() {
+        // If the ray hits nothing, return the background color.
+        return *background;
     }
+    let rec = rec_op.unwrap();
 
     let mut srec = ScatterRecord::default();
     let emitted = rec

@@ -31,24 +31,28 @@ impl XYRect {
 }
 
 impl Hittable for XYRect {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().z()) / r.direction().z();
         if t < t_min || t > t_max {
-            return false;
+            return None;
         }
         let x = r.origin().x() + t * r.direction().x();
         let y = r.origin().y() + t * r.direction().y();
         if x < self.x0 || x > self.x1 || y < self.y0 || y > self.y1 {
-            return false;
+            return None;
         }
-        rec.u = (x - self.x0) / (self.x1 - self.x0);
-        rec.v = (y - self.y0) / (self.y1 - self.y0);
-        rec.t = t;
+        let mut rec = HitRecord {
+            p: r.at(t),
+            normal: Default::default(),
+            t,
+            u: (x - self.x0) / (self.x1 - self.x0),
+            v: (y - self.y0) / (self.y1 - self.y0),
+            front_face: false,
+            mat_ptr: self.mp.clone(),
+        };
         let outward_normal = Vec3::new(0.0, 0.0, 1.0);
         rec.set_face_normal(r, &outward_normal);
-        rec.mat_ptr = self.mp.clone();
-        rec.p = r.at(t);
-        true
+        Some(rec)
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
@@ -84,24 +88,28 @@ impl XZRect {
 }
 
 impl Hittable for XZRect {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().y()) / r.direction().y();
         if t < t_min || t > t_max {
-            return false;
+            return None;
         }
         let x = r.origin().x() + t * r.direction().x();
         let z = r.origin().z() + t * r.direction().z();
         if x < self.x0 || x > self.x1 || z < self.z0 || z > self.z1 {
-            return false;
+            return None;
         }
-        rec.u = (x - self.x0) / (self.x1 - self.x0);
-        rec.v = (z - self.z0) / (self.z1 - self.z0);
-        rec.t = t;
+        let mut rec = HitRecord {
+            p: r.at(t),
+            normal: Default::default(),
+            t,
+            u: (x - self.x0) / (self.x1 - self.x0),
+            v: (z - self.z0) / (self.z1 - self.z0),
+            front_face: false,
+            mat_ptr: self.mp.clone(),
+        };
         let outward_normal = Vec3::new(0.0, 1.0, 0.0);
         rec.set_face_normal(r, &outward_normal);
-        rec.mat_ptr = self.mp.clone();
-        rec.p = r.at(t);
-        true
+        Some(rec)
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
@@ -113,10 +121,11 @@ impl Hittable for XZRect {
     }
 
     fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
-        let mut rec = HitRecord::default();
-        if !self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY, &mut rec) {
+        let op = self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY);
+        if op.is_none() {
             return 0.0;
         }
+        let rec = op.unwrap();
         let area = (self.x1 - self.x0) * (self.z1 - self.z0);
         let distance_squared = rec.t * rec.t * v.length_squared();
         let cosine = (dot(v, &rec.normal) / v.length()).abs();
@@ -157,24 +166,28 @@ impl YZRect {
 }
 
 impl Hittable for YZRect {
-    fn hit(&self, r: &Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let t = (self.k - r.origin().x()) / r.direction().x();
         if t < t_min || t > t_max {
-            return false;
+            return None;
         }
         let y = r.origin().y() + t * r.direction().y();
         let z = r.origin().z() + t * r.direction().z();
         if z < self.z0 || z > self.z1 || y < self.y0 || y > self.y1 {
-            return false;
+            return None;
         }
-        rec.u = (y - self.y0) / (self.y1 - self.y0);
-        rec.v = (z - self.z0) / (self.z1 - self.z0);
-        rec.t = t;
+        let mut rec = HitRecord {
+            p: r.at(t),
+            normal: Default::default(),
+            t,
+            u: (y - self.y0) / (self.y1 - self.y0),
+            v: (z - self.z0) / (self.z1 - self.z0),
+            front_face: false,
+            mat_ptr: self.mp.clone(),
+        };
         let outward_normal = Vec3::new(1.0, 0.0, 0.0);
         rec.set_face_normal(r, &outward_normal);
-        rec.mat_ptr = self.mp.clone();
-        rec.p = r.at(t);
-        true
+        Some(rec)
     }
 
     fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
