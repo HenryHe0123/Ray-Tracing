@@ -292,7 +292,9 @@ pub fn final_scene() -> HittableList {
     objects.add(Arc::new(BVHNode::new(&boxes1, 0.0, 1.0)));
 
     let light = Arc::new(DiffuseLight::new(&Color::new(7.0, 7.0, 7.0)));
-    objects.add(Arc::new(XZRect::new(123., 423., 147., 412., 554., light)));
+    objects.add(Arc::new(FlipFace::new(Arc::new(XZRect::new(
+        123., 423., 147., 412., 554., light,
+    )))));
 
     let center1 = Point3::new(400., 400., 200.);
     let center2 = Point3::new(430., 400., 200.);

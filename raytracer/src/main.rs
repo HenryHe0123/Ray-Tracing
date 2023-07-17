@@ -18,12 +18,11 @@ pub mod vec3;
 
 use crate::aarect::XZRect;
 use crate::camera::Camera;
-use crate::hittable::{Hittable, HittableList};
+use crate::hittable::Hittable;
 use crate::material::EmptyMaterial;
 use crate::ray::ray_color;
 use crate::rt_weekend::random_double;
 use crate::scene::*;
-use crate::sphere::Sphere;
 use crate::vec3::Vec3;
 use console::style;
 use image::{ImageBuffer, RgbImage};
@@ -34,49 +33,42 @@ use std::{fs::File, process::exit, thread};
 use vec3::{Color, Point3};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image12.jpg");
+    let path = std::path::Path::new("output/book3/image22(b2)-2500.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 1.0;
-    let width = 600;
-    let samples_per_pixel: u32 = 1000;
+    let width = 800;
+    let samples_per_pixel: u32 = 2500;
     let max_bounce_depth: i32 = 50;
 
-    //World & Camera
-    let world = cornell_box();
+    //World
+    let world = final_scene();
+    let background = Color::default();
 
-    //-------------------------------------------------
-    let mut lights = HittableList::default();
-
-    let light = XZRect::new(
-        213.,
-        343.,
-        227.,
-        332.,
+    //Lights
+    //let mut lights = HittableList::default();
+    let lights = XZRect::new(
+        123.,
+        423.,
+        147.,
+        412.,
         554.,
         Arc::new(EmptyMaterial::default()),
     );
-    lights.add(Arc::new(light));
 
-    let light = Sphere::new(
-        &Point3::new(190., 90., 190.),
-        90.,
-        Arc::new(EmptyMaterial::default()),
-    );
-    lights.add(Arc::new(light));
-    //--------------------------------------------------
-
-    let lookfrom = Point3::new(278.0, 278.0, -800.0);
+    //Camera
+    let lookfrom = Point3::new(478.0, 278.0, -600.0);
     let lookat = Point3::new(278.0, 278.0, 0.0);
-    let aperture = 0.0;
     let vfov = 40.0;
-    let background = Color::default();
+    let aperture = 0.0;
 
     let height = (width as f64 / aspect_ratio) as u32;
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
+    let time0 = 0.0;
+    let time1 = 1.0;
 
     let camera = Camera::new(
         &lookfrom,
@@ -120,7 +112,7 @@ fn main() {
                     let u = ((pixel.0 as f64) + random_double()) / ((width - 1) as f64);
                     let v =
                         (((height - pixel.1 - 1) as f64) + random_double()) / ((height - 1) as f64);
-                    let r = camera.get_ray(u, v, 0.0, 1.0);
+                    let r = camera.get_ray(u, v, time0, time1);
                     pixel_color +=
                         ray_color(&r, &background, world.as_ref(), &lights, max_bounce_depth);
                 }
@@ -150,31 +142,6 @@ fn main() {
     for thread in threads {
         thread.join().unwrap();
     }
-
-    // Single Thread
-    //
-    // let progress = if option_env!("CI").unwrap_or_default() == "true" {
-    //     ProgressBar::hidden()
-    // } else {
-    //     ProgressBar::new((height * width) as u64)
-    // };
-    //
-    // for j in 0..height {
-    //     for i in 0..width {
-    //         let pixel = img.get_pixel_mut(i, j);
-    //         let mut pixel_color = Color::default();
-    //         for _s in 0..samples_per_pixel {
-    //             let u = ((i as f64) + random_double()) / ((width - 1) as f64);
-    //             let v = (((height - j - 1) as f64) + random_double()) / ((height - 1) as f64);
-    //             let r = camera.get_ray(u, v, 0.0, 1.0);
-    //             pixel_color += ray_color(&r, &background, &world, max_bounce_depth);
-    //         }
-    //         *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
-    //         progress.inc(1);
-    //     }
-    // }
-    //
-    // progress.finish();
 
     println!(
         "Output image as \"{}\"",
