@@ -4,9 +4,7 @@ use crate::hittable::{HitRecord, Hittable, HittableList};
 use crate::material::Material;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
-use std::sync::Arc;
 
-#[derive(Clone)]
 pub struct MyBox {
     pub box_min: Point3,
     pub box_max: Point3,
@@ -16,7 +14,7 @@ pub struct MyBox {
 impl MyBox {
     pub fn new<M: Material + Clone + 'static>(p0: &Point3, p1: &Point3, material: M) -> Self {
         let mut sides = HittableList::default();
-        sides.add(Arc::new(XYRect::new(
+        sides.add(Box::new(XYRect::new(
             p0.x(),
             p1.x(),
             p0.y(),
@@ -24,7 +22,7 @@ impl MyBox {
             p1.z(),
             material.clone(),
         )));
-        sides.add(Arc::new(XYRect::new(
+        sides.add(Box::new(XYRect::new(
             p0.x(),
             p1.x(),
             p0.y(),
@@ -33,7 +31,7 @@ impl MyBox {
             material.clone(),
         )));
 
-        sides.add(Arc::new(XZRect::new(
+        sides.add(Box::new(XZRect::new(
             p0.x(),
             p1.x(),
             p0.z(),
@@ -41,7 +39,7 @@ impl MyBox {
             p1.y(),
             material.clone(),
         )));
-        sides.add(Arc::new(XZRect::new(
+        sides.add(Box::new(XZRect::new(
             p0.x(),
             p1.x(),
             p0.z(),
@@ -49,7 +47,7 @@ impl MyBox {
             p0.y(),
             material.clone(),
         )));
-        sides.add(Arc::new(YZRect::new(
+        sides.add(Box::new(YZRect::new(
             p0.y(),
             p1.y(),
             p0.z(),
@@ -57,7 +55,7 @@ impl MyBox {
             p1.x(),
             material.clone(),
         )));
-        sides.add(Arc::new(YZRect::new(
+        sides.add(Box::new(YZRect::new(
             p0.y(),
             p1.y(),
             p0.z(),

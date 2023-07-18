@@ -5,28 +5,22 @@ use crate::utility::random_int_range;
 use crate::utility::ray::Ray;
 use aabb::{surrounding_box, AABB};
 use std::cmp::Ordering;
-use std::sync::Arc;
 
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct BVHNode {
-    left: Option<Arc<dyn Hittable>>,
-    right: Option<Arc<dyn Hittable>>,
+    left: Option<Box<dyn Hittable>>,
+    right: Option<Box<dyn Hittable>>,
     box_: AABB,
 }
 
 impl BVHNode {
-    pub fn new(list: &HittableList, time0: f64, time1: f64) -> Self {
-        Self::build(
-            &mut list.objects.clone(),
-            0,
-            list.objects.len(),
-            time0,
-            time1,
-        )
+    pub fn new(mut list: HittableList, time0: f64, time1: f64) -> Self {
+        let len = list.objects.len();
+        Self::build(&mut list.objects, 0, len, time0, time1)
     }
 
     pub fn build(
-        objects: &mut [Arc<dyn Hittable>],
+        objects: &mut Vec<Box<dyn Hittable>>,
         start: usize,
         end: usize,
         time0: f64,
@@ -37,45 +31,63 @@ impl BVHNode {
         let mut node = Self::default();
         match object_span {
             1 => {
-                node.left = Some(objects[start].clone());
-                node.right = Some(objects[start].clone());
+                node.left = Some(objects.remove(start));
+                node.right = None;
             }
             2 => {
-                if Self::box_compare(&objects[start], &objects[start + 1], axis as usize) {
-                    node.left = Some(objects[start].clone());
-                    node.right = Some(objects[start + 1].clone());
+                if Self::box_compare(
+                    objects[start].as_ref(),
+                    objects[start + 1].as_ref(),
+                    axis as usize,
+                ) {
+                    node.right = Some(objects.remove(start + 1));
+                    node.left = Some(objects.remove(start));
                 } else {
-                    node.left = Some(objects[start + 1].clone());
-                    node.right = Some(objects[start].clone());
+                    node.left = Some(objects.remove(start + 1));
+                    node.right = Some(objects.remove(start));
                 }
             }
             _other => {
-                objects[start..end].sort_by(|a, b| BVHNode::box_compare_order(a, b, axis as usize));
+                objects[start..end].sort_by(|a, b| {
+                    BVHNode::box_compare_order(a.as_ref(), b.as_ref(), axis as usize)
+                });
                 let mid = start + object_span / 2;
-                node.left = Some(Arc::new(Self::build(objects, start, mid, time0, time1)));
-                node.right = Some(Arc::new(Self::build(objects, mid, end, time0, time1)));
+                node.right = Some(Box::new(Self::build(objects, mid, end, time0, time1)));
+                node.left = Some(Box::new(Self::build(objects, start, mid, time0, time1)));
             }
         }
         let mut box_left = AABB::default();
         let mut box_right = AABB::default();
-        if !node
-            .left
-            .as_ref()
-            .unwrap()
-            .bounding_box(time0, time1, &mut box_left)
-            || !node
-                .right
+        let bool1 = if node.left.is_some() {
+            node.left
+                .as_ref()
+                .unwrap()
+                .bounding_box(time0, time1, &mut box_left)
+        } else {
+            false
+        };
+        let bool2 = if node.right.is_some() {
+            node.right
                 .as_ref()
                 .unwrap()
                 .bounding_box(time0, time1, &mut box_right)
-        {
-            panic!("No bounding box in BVHNode constructor.");
-        }
-        node.box_ = surrounding_box(&box_left, &box_right);
+        } else {
+            false
+        };
+
+        node.box_ = if bool1 {
+            if bool2 {
+                surrounding_box(&box_left, &box_right)
+            } else {
+                box_left
+            }
+        } else {
+            box_right
+        };
         node
     }
 
-    fn box_compare(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: usize) -> bool {
+    fn box_compare(a: &dyn Hittable, b: &dyn Hittable, axis: usize) -> bool {
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {
@@ -84,7 +96,7 @@ impl BVHNode {
         box_a.min()[axis] < box_b.min()[axis]
     }
 
-    fn box_compare_order(a: &Arc<dyn Hittable>, b: &Arc<dyn Hittable>, axis: usize) -> Ordering {
+    fn box_compare_order(a: &dyn Hittable, b: &dyn Hittable, axis: usize) -> Ordering {
         let mut box_a = AABB::default();
         let mut box_b = AABB::default();
         if !a.bounding_box(0.0, 0.0, &mut box_a) || !b.bounding_box(0.0, 0.0, &mut box_b) {

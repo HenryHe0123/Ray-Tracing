@@ -24,14 +24,14 @@ use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image22(b2)-10000.jpg");
+    let path = std::path::Path::new("output/book3/image22(b2)-8000.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 1.0;
     let width = 800;
-    let samples_per_pixel: u32 = 10000;
+    let samples_per_pixel: u32 = 8000;
     let max_bounce_depth: i32 = 50;
 
     //World
@@ -69,7 +69,7 @@ fn main() {
     let mut img: RgbImage = ImageBuffer::new(width, height);
 
     //Multi Threads
-    let threads_number: usize = 10;
+    let threads_number: usize = 3;
     let shuffle: bool = true;
 
     let multi_progress_bar = MultiProgress::new();
@@ -86,7 +86,8 @@ fn main() {
         let world = world.clone();
         let camera = camera;
         let pixels = pixels.clone();
-        let lights = Arc::new(lights.clone()) as Arc<dyn Hittable>;
+        //let lights = Arc::new(lights.clone()) as Arc<dyn Hittable>;
+        let lights = lights.clone();
         let pb = multi_progress_bar.add(ProgressBar::new(pixels_per_thread));
         pb.set_style(ProgressStyle::default_bar()
             .template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] [{pos}/{len}] ({eta})")
@@ -147,7 +148,7 @@ fn ray_color(
     r: &Ray,
     background: &Color,
     world: &impl Hittable,
-    lights: &Arc<dyn Hittable>,
+    lights: &dyn Hittable,
     depth: i32,
 ) -> Color {
     if depth <= 0 {
@@ -172,7 +173,7 @@ fn ray_color(
             * ray_color(&srec.specular_ray, background, world, lights, depth - 1);
     }
 
-    let light_pdf = HittablePDF::new(lights.as_ref(), &rec.p);
+    let light_pdf = HittablePDF::new(lights, &rec.p);
     let cos_pdf_box = srec.pdf_ptr.unwrap();
     let cos_pdf_ptr = cos_pdf_box.as_ref();
     let mixed_pdf = MixturePDF::new(&light_pdf, cos_pdf_ptr);

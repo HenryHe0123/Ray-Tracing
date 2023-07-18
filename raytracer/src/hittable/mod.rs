@@ -10,7 +10,6 @@ use crate::utility::random_int_range;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
 use std::f64::INFINITY;
-use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct HitRecord<'a> {
@@ -63,9 +62,8 @@ pub trait Hittable: Send + Sync {
     }
 }
 
-#[derive(Clone)]
 pub struct HittableList {
-    pub objects: Vec<Arc<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
@@ -79,7 +77,7 @@ impl HittableList {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, obj: Arc<dyn Hittable>) {
+    pub fn add(&mut self, obj: Box<dyn Hittable>) {
         self.objects.push(obj);
     }
 }
@@ -149,15 +147,15 @@ impl Default for HittableList {
 }
 
 #[derive(Clone, Default)]
-pub struct Translate {
-    pub ptr: Option<Arc<dyn Hittable>>,
+pub struct Translate<H: Hittable> {
+    pub ptr: H,
     pub offset: Vec3,
 }
 
-impl Hittable for Translate {
+impl<H: Hittable> Hittable for Translate<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray::new(&(r.origin() - self.offset), &r.direction(), r.time());
-        if let Some(mut rec) = self.ptr.as_ref().unwrap().hit(&moved_r, t_min, t_max) {
+        if let Some(mut rec) = self.ptr.hit(&moved_r, t_min, t_max) {
             rec.p += self.offset;
             let normal = rec.normal;
             rec.set_face_normal(&moved_r, &normal);
@@ -168,12 +166,7 @@ impl Hittable for Translate {
 
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
         let mut temp_box = AABB::default();
-        if !self
-            .ptr
-            .as_ref()
-            .unwrap()
-            .bounding_box(time0, time1, &mut temp_box)
-        {
+        if !self.ptr.bounding_box(time0, time1, &mut temp_box) {
             return false;
         }
         *output_box = AABB::new(
@@ -184,25 +177,25 @@ impl Hittable for Translate {
     }
 }
 
-impl Translate {
-    pub fn new(p_clone: Arc<dyn Hittable>, displacement: &Vec3) -> Self {
+impl<H: Hittable> Translate<H> {
+    pub fn new(p: H, displacement: &Vec3) -> Self {
         Self {
-            ptr: Some(p_clone),
+            ptr: p,
             offset: *displacement,
         }
     }
 }
 
 #[derive(Clone, Default)]
-pub struct RotateY {
-    pub ptr: Option<Arc<dyn Hittable>>,
+pub struct RotateY<H: Hittable> {
+    pub ptr: H,
     pub sin_theta: f64,
     pub cos_theta: f64,
     pub hasbox: bool,
     pub bbox: AABB,
 }
 
-impl Hittable for RotateY {
+impl<H: Hittable> Hittable for RotateY<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let mut origin = r.origin();
         let mut direction = r.direction();
@@ -215,7 +208,7 @@ impl Hittable for RotateY {
 
         let rotated_r = Ray::new(&origin, &direction, r.time());
 
-        if let Some(mut rec) = self.ptr.as_ref().unwrap().hit(&rotated_r, t_min, t_max) {
+        if let Some(mut rec) = self.ptr.hit(&rotated_r, t_min, t_max) {
             let mut p = rec.p;
             let mut normal = rec.normal;
 
@@ -239,13 +232,13 @@ impl Hittable for RotateY {
     }
 }
 
-impl RotateY {
-    pub fn new(p_clone: Arc<dyn Hittable>, angle: f64) -> Self {
+impl<H: Hittable> RotateY<H> {
+    pub fn new(p: H, angle: f64) -> Self {
         let radians = angle.to_radians();
         let sin_theta = radians.sin();
         let cos_theta = radians.cos();
         let mut bbox = AABB::default();
-        let hasbox = p_clone.bounding_box(0.0, 1.0, &mut bbox);
+        let hasbox = p.bounding_box(0.0, 1.0, &mut bbox);
         let mut min = Point3::new(INFINITY, INFINITY, INFINITY);
         let mut max = Point3::new(-INFINITY, -INFINITY, -INFINITY);
         for i in 0..2 {
@@ -269,7 +262,7 @@ impl RotateY {
         }
         bbox = AABB::new(&min, &max);
         Self {
-            ptr: Some(p_clone),
+            ptr: p,
             sin_theta,
             cos_theta,
             hasbox,
@@ -279,19 +272,19 @@ impl RotateY {
 }
 
 #[derive(Clone, Default)]
-pub struct FlipFace {
-    pub ptr: Option<Arc<dyn Hittable + Send + Sync>>,
+pub struct FlipFace<H: Hittable> {
+    pub ptr: H,
 }
 
-impl FlipFace {
-    pub fn new(p_clone: Arc<dyn Hittable + Send + Sync>) -> Self {
-        Self { ptr: Some(p_clone) }
+impl<H: Hittable> FlipFace<H> {
+    pub fn new(p: H) -> Self {
+        Self { ptr: p }
     }
 }
 
-impl Hittable for FlipFace {
+impl<H: Hittable> Hittable for FlipFace<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let op = self.ptr.as_ref().unwrap().hit(r, t_min, t_max);
+        let op = self.ptr.hit(r, t_min, t_max);
         op.as_ref()?;
         let mut rec = op.unwrap();
         rec.front_face = !rec.front_face;
@@ -299,9 +292,6 @@ impl Hittable for FlipFace {
     }
 
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
-        self.ptr
-            .as_ref()
-            .unwrap()
-            .bounding_box(time0, time1, output_box)
+        self.ptr.bounding_box(time0, time1, output_box)
     }
 }
