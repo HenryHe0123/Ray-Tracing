@@ -24,18 +24,18 @@ use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
 fn main() {
-    let path = std::path::Path::new("output/book3/image22(b2)-8000.jpg");
+    let path = std::path::Path::new("output/works/static-final-scene(b2)-10000.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 1.0;
     let width = 800;
-    let samples_per_pixel: u32 = 8000;
+    let samples_per_pixel: u32 = 10000;
     let max_bounce_depth: i32 = 50;
 
     //World
-    let world = final_scene();
+    let world = static_final_scene();
     let background = Color::default();
 
     //Lights

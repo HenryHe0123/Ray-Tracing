@@ -8,6 +8,9 @@ use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
 use crate::texture::*;
 use crate::utility::vec3::*;
 use crate::utility::*;
+use raytracer_codegen::impl_static_final_scene;
+
+impl_static_final_scene!();
 
 pub fn random_scene() -> HittableList {
     let mut world = HittableList::default();
