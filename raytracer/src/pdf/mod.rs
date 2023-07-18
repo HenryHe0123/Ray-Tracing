@@ -40,18 +40,18 @@ impl PDF for CosPDF {
 }
 
 #[derive(Clone)]
-pub struct HittablePDF<'a> {
+pub struct HittablePDF<'a, H: Hittable> {
     o: Point3,
-    ptr: &'a dyn Hittable,
+    ptr: &'a H,
 }
 
-impl<'a> HittablePDF<'a> {
-    pub fn new(ptr: &'a dyn Hittable, origin: &Point3) -> Self {
+impl<'a, H: Hittable> HittablePDF<'a, H> {
+    pub fn new(ptr: &'a H, origin: &Point3) -> Self {
         Self { o: *origin, ptr }
     }
 }
 
-impl<'a> PDF for HittablePDF<'a> {
+impl<'a, H: Hittable> PDF for HittablePDF<'a, H> {
     fn value(&self, direction: &Vec3) -> f64 {
         self.ptr.pdf_value(&self.o, direction)
     }
@@ -62,26 +62,27 @@ impl<'a> PDF for HittablePDF<'a> {
 }
 
 #[derive(Clone)]
-pub struct MixturePDF<'a> {
-    p: [&'a dyn PDF; 2],
+pub struct MixturePDF<'a, P0: PDF, P1: PDF> {
+    p0: &'a P0,
+    p1: &'a P1,
 }
 
-impl<'a> MixturePDF<'a> {
-    pub fn new(p0: &'a dyn PDF, p1: &'a dyn PDF) -> Self {
-        Self { p: [p0, p1] }
+impl<'a, P0: PDF, P1: PDF> MixturePDF<'a, P0, P1> {
+    pub fn new(p0: &'a P0, p1: &'a P1) -> Self {
+        Self { p0, p1 }
     }
 }
 
-impl<'a> PDF for MixturePDF<'a> {
+impl<'a, P0: PDF, P1: PDF> PDF for MixturePDF<'a, P0, P1> {
     fn value(&self, direction: &Vec3) -> f64 {
-        0.5 * (self.p[0].value(direction) + self.p[1].value(direction))
+        0.5 * (self.p0.value(direction) + self.p1.value(direction))
     }
 
     fn generate(&self) -> Vec3 {
         if random_double() < 0.5 {
-            self.p[0].generate()
+            self.p0.generate()
         } else {
-            self.p[1].generate()
+            self.p1.generate()
         }
     }
 }

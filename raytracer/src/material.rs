@@ -1,5 +1,5 @@
 use crate::hittable::HitRecord;
-use crate::pdf::{CosPDF, PDF};
+use crate::pdf::CosPDF;
 use crate::texture::{SolidColor, Texture};
 use crate::utility::random_double;
 use crate::utility::ray::Ray;
@@ -11,7 +11,7 @@ pub struct ScatterRecord {
     pub specular_ray: Ray,
     pub is_specular: bool,
     pub attenuation: Color,
-    pub pdf_ptr: Option<Box<dyn PDF>>,
+    pub pdf_ptr: Option<Box<CosPDF>>,
 }
 
 pub trait Material: Send + Sync {

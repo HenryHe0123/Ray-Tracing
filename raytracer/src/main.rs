@@ -148,7 +148,7 @@ fn ray_color(
     r: &Ray,
     background: &Color,
     world: &impl Hittable,
-    lights: &dyn Hittable,
+    lights: &impl Hittable,
     depth: i32,
 ) -> Color {
     if depth <= 0 {
