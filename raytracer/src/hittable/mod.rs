@@ -60,6 +60,9 @@ pub trait Hittable: Send + Sync {
     fn random(&self, _o: &Vec3) -> Vec3 {
         Vec3::new(1.0, 0.0, 0.0)
     }
+    fn empty(&self) -> bool {
+        false
+    }
 }
 
 pub struct HittableList {
@@ -138,6 +141,10 @@ impl Hittable for HittableList {
         let size = self.objects.len() as i32;
         self.objects[random_int_range(0, size - 1) as usize].random(o)
     }
+
+    fn empty(&self) -> bool {
+        self.objects.is_empty()
+    }
 }
 
 impl Default for HittableList {
@@ -145,6 +152,8 @@ impl Default for HittableList {
         Self::new()
     }
 }
+
+//--------------------------------Transform--------------------------------------
 
 #[derive(Clone, Default)]
 pub struct Translate<H: Hittable> {
@@ -174,6 +183,14 @@ impl<H: Hittable> Hittable for Translate<H> {
             &(temp_box.max() + self.offset),
         );
         true
+    }
+
+    fn pdf_value(&self, o: &Point3, v: &Vec3) -> f64 {
+        self.ptr.pdf_value(&(*o - self.offset), v)
+    }
+
+    fn random(&self, o: &Vec3) -> Vec3 {
+        self.ptr.random(&(*o - self.offset))
     }
 }
 
@@ -229,6 +246,18 @@ impl<H: Hittable> Hittable for RotateY<H> {
     fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
         *output_box = self.bbox;
         self.hasbox
+    }
+
+    fn pdf_value(&self, o: &Point3, v: &Vec3) -> f64 {
+        let rotated_o = rotate_vec_y(o, self.sin_theta, self.cos_theta);
+        let rotated_v = rotate_vec_y(v, self.sin_theta, self.cos_theta);
+        self.ptr.pdf_value(&rotated_o, &rotated_v)
+    }
+
+    fn random(&self, o: &Vec3) -> Vec3 {
+        let rotated_o = rotate_vec_y(o, self.sin_theta, self.cos_theta);
+        let rotated_rand = self.ptr.random(&rotated_o);
+        rotate_vec_y(&rotated_rand, -self.sin_theta, self.cos_theta)
     }
 }
 
@@ -294,4 +323,18 @@ impl<H: Hittable> Hittable for FlipFace<H> {
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool {
         self.ptr.bounding_box(time0, time1, output_box)
     }
+
+    fn pdf_value(&self, o: &Point3, v: &Vec3) -> f64 {
+        self.ptr.pdf_value(o, v)
+    }
+
+    fn random(&self, o: &Vec3) -> Vec3 {
+        self.ptr.random(o)
+    }
+}
+
+//--------------------------------------------------------------------------
+
+fn rotate_vec_y(v: &Vec3, sin: f64, cos: f64) -> Vec3 {
+    Vec3::new(cos * v.x() - sin * v.z(), v.y(), sin * v.x() + cos * v.z())
 }

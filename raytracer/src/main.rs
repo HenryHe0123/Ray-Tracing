@@ -7,9 +7,8 @@ pub mod texture;
 pub mod utility;
 
 use crate::camera::Camera;
-use crate::hittable::aarect::XZRect;
-use crate::hittable::Hittable;
-use crate::material::{ScatterRecord, DEFAULT_MATERIAL};
+use crate::hittable::{Hittable, HittableList};
+use crate::material::*;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::scene::*;
 use crate::utility::random_double;
@@ -24,28 +23,29 @@ use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
 fn main() {
-    let path = std::path::Path::new("output/works/static-final-scene(b2)-10000.jpg");
+    let path = std::path::Path::new("output/works/random-scene-rebuild.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let aspect_ratio = 1.0;
+    let aspect_ratio = 16.0 / 9.0;
     let width = 800;
-    let samples_per_pixel: u32 = 10000;
+    let samples_per_pixel: u32 = 1000;
     let max_bounce_depth: i32 = 50;
 
     //World
-    let world = static_final_scene();
-    let background = Color::default();
+    let world = random_scene();
+    let background = Color::new(0.5, 0.7, 1.0);
 
     //Lights
     //let mut lights = HittableList::default();
-    let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
+    //let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
+    let lights = HittableList::default();
 
     //Camera
-    let lookfrom = Point3::new(478.0, 278.0, -600.0);
-    let lookat = Point3::new(278.0, 278.0, 0.0);
-    let vfov = 40.0;
+    let lookfrom = Point3::new(13.0, 2.0, 3.0);
+    let lookat = Point3::new(0.0, 0.0, 0.0);
+    let vfov = 20.0;
     let aperture = 0.0;
 
     let height = (width as f64 / aspect_ratio) as u32;
@@ -78,6 +78,7 @@ fn main() {
     let mut recv = Vec::new();
 
     let world = Arc::new(world);
+    let lights = Arc::new(lights);
 
     for (_k, pixels) in pixel_list.iter().enumerate() {
         let (tx, rx) = mpsc::channel();
@@ -100,8 +101,13 @@ fn main() {
                     let v =
                         (((height - pixel.1 - 1) as f64) + random_double()) / ((height - 1) as f64);
                     let r = camera.get_ray(u, v, time0, time1);
-                    pixel_color +=
-                        ray_color(&r, &background, world.as_ref(), &lights, max_bounce_depth);
+                    pixel_color += ray_color(
+                        &r,
+                        &background,
+                        world.as_ref(),
+                        lights.as_ref(),
+                        max_bounce_depth,
+                    );
                 }
                 pixel_color_list.push((pixel, pixel_color));
                 pb.inc(1);
@@ -178,8 +184,14 @@ fn ray_color(
     let cos_pdf_ptr = cos_pdf_box.as_ref();
     let mixed_pdf = MixturePDF::new(&light_pdf, cos_pdf_ptr);
 
-    let scattered = Ray::new(&rec.p, &mixed_pdf.generate(), r.time());
-    let pdf_val = mixed_pdf.value(&scattered.direction());
+    let pdf_ptr = if lights.empty() {
+        cos_pdf_ptr as &dyn PDF
+    } else {
+        &mixed_pdf as &dyn PDF
+    };
+
+    let scattered = Ray::new(&rec.p, &pdf_ptr.generate(), r.time());
+    let pdf_val = pdf_ptr.value(&scattered.direction());
 
     emitted
         + srec.attenuation

@@ -61,6 +61,27 @@ impl<M: Material> Hittable for XYRect<M> {
         );
         true
     }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        let op = self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY);
+        if op.is_none() {
+            return 0.0;
+        }
+        let rec = op.unwrap();
+        let area = (self.x1 - self.x0) * (self.y1 - self.y0);
+        let distance_squared = rec.t * rec.t * v.length_squared();
+        let cosine = (dot(v, &rec.normal) / v.length()).abs();
+        distance_squared / (cosine * area)
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        let random_point = Point3::new(
+            random_double_range(self.x0, self.x1),
+            random_double_range(self.y0, self.y1),
+            self.k,
+        );
+        random_point - *origin
+    }
 }
 
 #[derive(Clone, Default)]
@@ -195,5 +216,26 @@ impl<M: Material> Hittable for YZRect<M> {
             &Point3::new(self.k + 0.0001, self.y1, self.z1),
         );
         true
+    }
+
+    fn pdf_value(&self, origin: &Point3, v: &Vec3) -> f64 {
+        let op = self.hit(&Ray::new(origin, v, 0.0), 0.001, INFINITY);
+        if op.is_none() {
+            return 0.0;
+        }
+        let rec = op.unwrap();
+        let area = (self.y1 - self.y0) * (self.z1 - self.z0);
+        let distance_squared = rec.t * rec.t * v.length_squared();
+        let cosine = (dot(v, &rec.normal) / v.length()).abs();
+        distance_squared / (cosine * area)
+    }
+
+    fn random(&self, origin: &Vec3) -> Vec3 {
+        let random_point = Point3::new(
+            self.k,
+            random_double_range(self.y0, self.y1),
+            random_double_range(self.z0, self.z1),
+        );
+        random_point - *origin
     }
 }
