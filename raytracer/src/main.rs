@@ -7,7 +7,7 @@ pub mod texture;
 pub mod utility;
 
 use crate::camera::Camera;
-use crate::hittable::{Hittable, HittableList};
+use crate::hittable::*;
 use crate::material::*;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
 use crate::scene::*;
@@ -34,7 +34,9 @@ fn main() {
     let width: usize = 800;
     let samples_per_pixel: u32 = 1000;
     let max_bounce_depth: i32 = 50;
+
     let edge_detect: bool = true;
+    let edge_detect_level = 128.0; //high: 64, low: 128
 
     //World
     let world = random_scene();
@@ -171,7 +173,11 @@ fn main() {
                 }
                 let g = ((gx * gx + gy * gy) as f64).sqrt();
                 let pixel = img.get_pixel_mut(i as u32, j as u32);
-                *pixel = image::Rgb(if g > 64.0 { [0, 0, 0] } else { rgb_table[i][j] });
+                *pixel = image::Rgb(if g > edge_detect_level {
+                    [0, 0, 0]
+                } else {
+                    rgb_table[i][j]
+                });
             }
         }
     }
