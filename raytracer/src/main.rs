@@ -22,16 +22,19 @@ use std::f64::INFINITY;
 use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
+const MAX_LEN: usize = 1000;
+
 fn main() {
-    let path = std::path::Path::new("output/works/random-scene-rebuild.jpg");
+    let path = std::path::Path::new("output/works/random-scene-edge-detect.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
     let aspect_ratio = 16.0 / 9.0;
-    let width = 800;
+    let width: usize = 800;
     let samples_per_pixel: u32 = 1000;
     let max_bounce_depth: i32 = 50;
+    let edge_detect: bool = true;
 
     //World
     let world = random_scene();
@@ -48,7 +51,7 @@ fn main() {
     let vfov = 20.0;
     let aperture = 0.0;
 
-    let height = (width as f64 / aspect_ratio) as u32;
+    let height = (width as f64 / aspect_ratio) as usize;
     let vup = Vec3::new(0.0, 1.0, 0.0);
     let dist_to_focus = 10.0;
     let time0 = 0.0;
@@ -66,7 +69,11 @@ fn main() {
 
     //Render
     let quality = 100;
-    let mut img: RgbImage = ImageBuffer::new(width, height);
+    let mut img: RgbImage = ImageBuffer::new(width as u32, height as u32);
+
+    //for edge detection
+    let mut rgb_table = vec![[[0u8; 3]; MAX_LEN]; MAX_LEN];
+    let mut gray_table = vec![[0u8; MAX_LEN]; MAX_LEN];
 
     //Multi Threads
     let threads_number: usize = 3;
@@ -122,16 +129,51 @@ fn main() {
         multi_progress_bar.join_and_clear().unwrap();
     }
 
+    for thread in threads {
+        thread.join().unwrap();
+    }
+
     for receiver in &recv {
         let pixel_color_list = receiver.recv().unwrap();
         for ((i, j), pixel_color) in pixel_color_list {
-            let pixel = img.get_pixel_mut(i, j);
-            *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
+            if edge_detect {
+                rgb_table[i][j] = pixel_color.multi_samples_rgb(samples_per_pixel);
+                gray_table[i][j] = gray_color(&rgb_table[i][j]);
+            } else {
+                let pixel = img.get_pixel_mut(i as u32, j as u32);
+                *pixel = image::Rgb(pixel_color.multi_samples_rgb(samples_per_pixel));
+            }
         }
     }
 
-    for thread in threads {
-        thread.join().unwrap();
+    if edge_detect {
+        let wx: [i32; 9] = [-1, 0, 1, -2, -0, 2, -1, 0, 1];
+        let wy: [i32; 9] = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+
+        for j in 1..height - 1 {
+            for i in 1..width - 1 {
+                let rgb = vec![
+                    gray_table[i - 1][j - 1],
+                    gray_table[i - 1][j],
+                    gray_table[i - 1][j + 1],
+                    gray_table[i][j - 1],
+                    gray_table[i][j],
+                    gray_table[i][j + 1],
+                    gray_table[i + 1][j - 1],
+                    gray_table[i + 1][j],
+                    gray_table[i + 1][j + 1],
+                ];
+                let mut gx = 0;
+                let mut gy = 0;
+                for k in 0..9 {
+                    gx += rgb[k] as i32 * wx[k];
+                    gy += rgb[k] as i32 * wy[k];
+                }
+                let g = ((gx * gx + gy * gy) as f64).sqrt();
+                let pixel = img.get_pixel_mut(i as u32, j as u32);
+                *pixel = image::Rgb(if g > 64.0 { [0, 0, 0] } else { rgb_table[i][j] });
+            }
+        }
     }
 
     println!(
@@ -201,13 +243,13 @@ fn ray_color(
 }
 
 fn pixel_allocate(
-    w: u32,
-    h: u32,
+    w: usize,
+    h: usize,
     threads_num: usize,
     shuffle: bool,
-) -> (Vec<Vec<(u32, u32)>>, u64) {
-    let mut pixels_per_thread = (w * h) as usize / threads_num;
-    if (w * h) as usize % threads_num > 0 {
+) -> (Vec<Vec<(usize, usize)>>, u64) {
+    let mut pixels_per_thread = (w * h) / threads_num;
+    if (w * h) % threads_num > 0 {
         pixels_per_thread += 1;
     }
 
@@ -230,4 +272,8 @@ fn pixel_allocate(
     }
 
     (pixel_set, pixels_per_thread as u64)
+}
+
+fn gray_color(rgb: &[u8; 3]) -> u8 {
+    rgb[0].max(rgb[1].max(rgb[2]))
 }

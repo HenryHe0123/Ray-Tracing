@@ -18,5 +18,5 @@
 
 #### CG-Bonus
 
-- [ ] Edge detection
+- [x] Edge detection
 - [ ] Normal mapping
