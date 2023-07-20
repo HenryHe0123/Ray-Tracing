@@ -25,7 +25,7 @@ use std::{fs::File, process::exit, thread};
 const MAX_LEN: usize = 1000;
 
 fn main() {
-    let path = std::path::Path::new("output/works/random-scene-edge-detect.jpg");
+    let path = std::path::Path::new("output/works/random-scene.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -35,7 +35,7 @@ fn main() {
     let samples_per_pixel: u32 = 1000;
     let max_bounce_depth: i32 = 50;
 
-    let edge_detect: bool = true;
+    let edge_detect: bool = false;
     let edge_detect_level = 128.0; //high: 64, low: 128
 
     //World
@@ -43,9 +43,22 @@ fn main() {
     let background = Color::new(0.5, 0.7, 1.0);
 
     //Lights
-    //let mut lights = HittableList::default();
     //let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
     let lights = HittableList::default();
+    // lights.add(Box::new(XZRect::new(
+    //     123.,
+    //     423.,
+    //     147.,
+    //     412.,
+    //     554.,
+    //     DEFAULT_MATERIAL,
+    // )));
+    // lights.add(Box::new(Triangle::new(
+    //     &Point3::new(200.0, 402.0, 200.),
+    //     &Point3::new(200.0, 402.0, 300.),
+    //     &Point3::new(300.0, 402.0, 250.),
+    //     DEFAULT_MATERIAL,
+    // )));
 
     //Camera
     let lookfrom = Point3::new(13.0, 2.0, 3.0);

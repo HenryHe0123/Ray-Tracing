@@ -4,7 +4,7 @@ use std::fmt;
 use std::ops::{Add, Div, Index, IndexMut, Mul, Sub};
 use std::ops::{AddAssign, DivAssign, MulAssign, Neg, SubAssign};
 
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, PartialEq)]
 pub struct Vec3 {
     e: [f64; 3],
 }
@@ -138,6 +138,34 @@ impl Vec3 {
 
     pub fn unit(&self) -> Vec3 {
         *self / self.length()
+    }
+
+    pub fn red() -> Self {
+        Self { e: [1., 0., 0.] }
+    }
+
+    pub fn green() -> Self {
+        Self { e: [0., 1., 0.] }
+    }
+
+    pub fn blue() -> Self {
+        Self { e: [0., 0., 1.] }
+    }
+
+    pub fn yellow() -> Self {
+        Self { e: [1., 1., 0.] }
+    }
+
+    pub fn purple() -> Self {
+        Self { e: [1., 0., 1.] }
+    }
+
+    pub fn black() -> Self {
+        Self { e: [0., 0., 0.] }
+    }
+
+    pub fn white() -> Self {
+        Self { e: [1., 1., 1.] }
     }
 }
 

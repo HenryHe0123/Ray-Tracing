@@ -79,7 +79,15 @@ pub fn random_scene() -> HittableList {
         1.0,
         material3,
     )));
-
+    //triangle test
+    //let checker = SolidColor::new(&Color::purple());
+    // world.add(Box::new(Triangle::new(
+    //     &Point3::new(12.0, 2.0, 2.9),
+    //     &Point3::new(12.0, 2.0, 2.6),
+    //     &Point3::new(12.0, 1.7, 2.75),
+    //     DiffuseLight::new_from_color(&Color::new(7.0, 7.0, 7.0)),
+    // )));
+    //
     world.add(Box::new(BVHNode::new(list, 0.0, 1.0)));
     world
 }

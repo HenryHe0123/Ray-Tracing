@@ -20,8 +20,16 @@ impl Ray {
         self.orig
     }
 
+    pub fn origin_borrow(&self) -> &Point3 {
+        &self.orig
+    }
+
     pub fn direction(&self) -> Vec3 {
         self.dir
+    }
+
+    pub fn direction_borrow(&self) -> &Vec3 {
+        &self.dir
     }
 
     pub fn at(&self, t: f64) -> Point3 {

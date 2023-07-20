@@ -3,12 +3,14 @@ pub mod bvh;
 pub mod constant_medium;
 pub mod mybox;
 pub mod sphere;
+pub mod triangle;
 
 use crate::hittable::bvh::aabb::{surrounding_box, AABB};
 use crate::material::{Material, DEFAULT_MATERIAL};
 use crate::utility::random_int_range;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
+use std::f64::consts::PI;
 use std::f64::INFINITY;
 
 #[derive(Clone)]
@@ -55,10 +57,10 @@ pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f64, time1: f64, output_box: &mut AABB) -> bool;
     fn pdf_value(&self, _o: &Point3, _v: &Vec3) -> f64 {
-        0.0
+        0.25 / PI
     }
     fn random(&self, _o: &Vec3) -> Vec3 {
-        Vec3::new(1.0, 0.0, 0.0)
+        Vec3::random().unit()
     }
     fn empty(&self) -> bool {
         false
@@ -163,11 +165,11 @@ pub struct Translate<H: Hittable> {
 
 impl<H: Hittable> Hittable for Translate<H> {
     fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
-        let moved_r = Ray::new(&(r.origin() - self.offset), &r.direction(), r.time());
+        let moved_r = Ray::new(&(r.origin() - self.offset), r.direction_borrow(), r.time());
         if let Some(mut rec) = self.ptr.hit(&moved_r, t_min, t_max) {
             rec.p += self.offset;
-            let normal = rec.normal;
-            rec.set_face_normal(&moved_r, &normal);
+            //let normal = rec.normal;
+            //rec.set_face_normal(&moved_r, &normal);
             return Some(rec);
         }
         None
@@ -236,7 +238,8 @@ impl<H: Hittable> Hittable for RotateY<H> {
             normal[2] = -self.sin_theta * rec.normal[0] + self.cos_theta * rec.normal[2];
 
             rec.p = p;
-            rec.set_face_normal(&rotated_r, &normal);
+            //rec.set_face_normal(&rotated_r, &normal);
+            rec.normal = normal; //
             return Some(rec);
         }
 
