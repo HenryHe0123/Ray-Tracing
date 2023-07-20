@@ -1,12 +1,14 @@
 pub mod camera;
 pub mod hittable;
 pub mod material;
+pub mod obj_loader;
 pub mod pdf;
 pub mod scene;
 pub mod texture;
 pub mod utility;
 
 use crate::camera::Camera;
+use crate::hittable::aarect::XZRect;
 use crate::hittable::*;
 use crate::material::*;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
@@ -25,26 +27,26 @@ use std::{fs::File, process::exit, thread};
 const MAX_LEN: usize = 1000;
 
 fn main() {
-    let path = std::path::Path::new("output/works/random-scene.jpg");
+    let path = std::path::Path::new("output/works/golden-cow.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
     //Image
-    let aspect_ratio = 16.0 / 9.0;
-    let width: usize = 800;
-    let samples_per_pixel: u32 = 1000;
+    let aspect_ratio = 1.0;
+    let width: usize = 600;
+    let samples_per_pixel: u32 = 5000;
     let max_bounce_depth: i32 = 50;
 
     let edge_detect: bool = false;
     let edge_detect_level = 128.0; //high: 64, low: 128
 
     //World
-    let world = random_scene();
-    let background = Color::new(0.5, 0.7, 1.0);
+    let world = golden_cow_in_cornell_box();
+    let background = Color::black();
 
     //Lights
-    //let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
-    let lights = HittableList::default();
+    let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
+    //let lights = HittableList::default();
     // lights.add(Box::new(XZRect::new(
     //     123.,
     //     423.,
@@ -61,9 +63,9 @@ fn main() {
     // )));
 
     //Camera
-    let lookfrom = Point3::new(13.0, 2.0, 3.0);
-    let lookat = Point3::new(0.0, 0.0, 0.0);
-    let vfov = 20.0;
+    let lookfrom = Point3::new(278.0, 278.0, -800.0);
+    let lookat = Point3::new(278.0, 278.0, 0.0);
+    let vfov = 40.0;
     let aperture = 0.0;
 
     let height = (width as f64 / aspect_ratio) as usize;
@@ -91,7 +93,7 @@ fn main() {
     let mut gray_table = vec![[0u8; MAX_LEN]; MAX_LEN];
 
     //Multi Threads
-    let threads_number: usize = 3;
+    let threads_number: usize = 14;
     let shuffle: bool = true;
 
     let multi_progress_bar = MultiProgress::new();

@@ -12,3 +12,4 @@ console = "0.9.1"
 indicatif = "0.16.2"
 rand = "0.8.5"
 raytracer_codegen = { path = "../raytracer_codegen" }
+tobj = { version = "4.0.0", default-features = false, features = ["use_f64"] }

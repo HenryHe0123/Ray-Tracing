@@ -83,6 +83,20 @@ impl Metal {
             fuzz: f.min(1.0),
         }
     }
+
+    pub fn gold() -> Self {
+        Self {
+            albedo: Color::gold(),
+            fuzz: 0.1,
+        }
+    }
+
+    pub fn silver() -> Self {
+        Self {
+            albedo: Color::silver(),
+            fuzz: 0.1,
+        }
+    }
 }
 
 impl Material for Metal {

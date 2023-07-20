@@ -197,10 +197,10 @@ impl<H: Hittable> Hittable for Translate<H> {
 }
 
 impl<H: Hittable> Translate<H> {
-    pub fn new(p: H, displacement: &Vec3) -> Self {
+    pub fn new(p: H, offset: &Vec3) -> Self {
         Self {
             ptr: p,
-            offset: *displacement,
+            offset: *offset,
         }
     }
 }

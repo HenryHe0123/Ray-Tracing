@@ -5,6 +5,7 @@ use crate::hittable::mybox::*;
 use crate::hittable::sphere::*;
 use crate::hittable::{FlipFace, HittableList, RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
+use crate::obj_loader::load;
 use crate::texture::*;
 use crate::utility::vec3::*;
 use crate::utility::*;
@@ -372,6 +373,42 @@ pub fn final_scene() -> HittableList {
         RotateY::new(bvh_ptr, 15.0),
         &Vec3::new(-100., 270., 395.),
     )));
+
+    objects
+}
+
+pub fn golden_cow_in_cornell_box() -> HittableList {
+    let mut objects = HittableList::default();
+    let red = Lambertian::new_from_color(&Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new_from_color(&Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new_from_color(&Color::new(0.12, 0.45, 0.15));
+    let light = DiffuseLight::new_from_color(&Color::new(15.0, 15.0, 15.0));
+    objects.add(Box::new(YZRect::new(0., 555., 0., 555., 555., green)));
+    objects.add(Box::new(YZRect::new(0., 555., 0., 555., 0., red)));
+    //flip light
+    objects.add(Box::new(FlipFace::new(XZRect::new(
+        213., 343., 227., 332., 554., light,
+    ))));
+    //
+    objects.add(Box::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
+    objects.add(Box::new(XZRect::new(
+        0.,
+        555.,
+        0.,
+        555.,
+        555.,
+        white.clone(),
+    )));
+    objects.add(Box::new(XYRect::new(0., 555., 0., 555., 555., white)));
+
+    let light = DiffuseLight::new_from_color(&Color::new(0.55, 0.55, 0.55));
+    objects.add(Box::new(XYRect::new(
+        -90000., 90000., -90000., 90000., -4000., light,
+    )));
+
+    let cow = load("objects/spot_triangulated_good.obj", Metal::gold(), 200.0);
+
+    objects.add(Box::new(Translate::new(cow, &Vec3::new(278., 144., 178.))));
 
     objects
 }

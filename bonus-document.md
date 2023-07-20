@@ -1,7 +1,7 @@
 ## Bonus Document
 
 - [x] Multi-threads
-- [ ] Support for `.obj` file
+- [x] Support for `.obj` file 
 
 #### Rust-Bonus
 
@@ -19,4 +19,3 @@
 #### CG-Bonus
 
 - [x] Edge detection
-- [ ] Normal mapping

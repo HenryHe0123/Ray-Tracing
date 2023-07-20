@@ -167,6 +167,16 @@ impl Vec3 {
     pub fn white() -> Self {
         Self { e: [1., 1., 1.] }
     }
+
+    pub fn gold() -> Self {
+        Self { e: [1., 0.843, 0.] }
+    }
+
+    pub fn silver() -> Self {
+        Self {
+            e: [0.753, 0.753, 0.753],
+        }
+    }
 }
 
 impl Index<usize> for Vec3 {
