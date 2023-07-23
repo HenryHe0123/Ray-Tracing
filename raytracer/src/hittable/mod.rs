@@ -85,6 +85,10 @@ impl HittableList {
     pub fn add(&mut self, obj: Box<dyn Hittable>) {
         self.objects.push(obj);
     }
+
+    pub fn size(&self) -> usize {
+        self.objects.len()
+    }
 }
 
 impl Hittable for HittableList {

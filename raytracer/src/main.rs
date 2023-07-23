@@ -31,10 +31,13 @@ fn main() {
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
+    let threads_number: usize = 10;
+    let shuffle: bool = true;
+
     //Image
     let aspect_ratio = 1.0;
     let width: usize = 600;
-    let samples_per_pixel: u32 = 5000;
+    let samples_per_pixel: u32 = 50;
     let max_bounce_depth: i32 = 50;
 
     let edge_detect: bool = false;
@@ -93,9 +96,6 @@ fn main() {
     let mut gray_table = vec![[0u8; MAX_LEN]; MAX_LEN];
 
     //Multi Threads
-    let threads_number: usize = 14;
-    let shuffle: bool = true;
-
     let multi_progress_bar = MultiProgress::new();
     let (pixel_list, pixels_per_thread) = pixel_allocate(width, height, threads_number, shuffle);
     let mut threads = Vec::new();

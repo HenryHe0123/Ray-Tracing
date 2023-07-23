@@ -27,8 +27,8 @@ impl<M: Material> Triangle<M> {
         let mut min = Point3::default();
         let mut max = Point3::default();
         for i in 0..3 {
-            min[i] = a[i].min(b[i]).min(c[i]) - 0.0001;
-            max[i] = a[i].max(b[i]).max(c[i]) + 0.0001;
+            min[i] = a[i].min(b[i]).min(c[i]) - 0.000001;
+            max[i] = a[i].max(b[i]).max(c[i]) + 0.000001;
         }
         Self {
             a: *a,

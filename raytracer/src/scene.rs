@@ -412,3 +412,42 @@ pub fn golden_cow_in_cornell_box() -> HittableList {
 
     objects
 }
+
+pub fn obj_in_cornell_box() -> HittableList {
+    let mut objects = HittableList::default();
+    let red = Lambertian::new_from_color(&Color::new(0.65, 0.05, 0.05));
+    let white = Lambertian::new_from_color(&Color::new(0.73, 0.73, 0.73));
+    let green = Lambertian::new_from_color(&Color::new(0.12, 0.45, 0.15));
+    let light = DiffuseLight::new_from_color(&Color::new(15.0, 15.0, 15.0));
+    objects.add(Box::new(YZRect::new(0., 555., 0., 555., 555., green)));
+    objects.add(Box::new(YZRect::new(0., 555., 0., 555., 0., red)));
+    //flip light
+    objects.add(Box::new(FlipFace::new(XZRect::new(
+        213., 343., 227., 332., 554., light,
+    ))));
+    //
+    objects.add(Box::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
+    objects.add(Box::new(XZRect::new(
+        0.,
+        555.,
+        0.,
+        555.,
+        555.,
+        white.clone(),
+    )));
+    objects.add(Box::new(XYRect::new(0., 555., 0., 555., 555., white)));
+
+    let light = DiffuseLight::new_from_color(&Color::new(0.55, 0.55, 0.55));
+    objects.add(Box::new(XYRect::new(
+        -90000., 90000., -90000., 90000., -4000., light,
+    )));
+
+    let obj = load("objects/car.obj", Metal::gold(), 120.0);
+
+    objects.add(Box::new(Translate::new(
+        RotateY::new(obj, 180.0),
+        &Vec3::new(278., 144.0 - 100.0, 178.),
+    )));
+
+    objects
+}

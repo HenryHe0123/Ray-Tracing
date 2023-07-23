@@ -14,7 +14,9 @@ pub fn load<M: Material + Clone + 'static>(pathname: &str, mat: M, scale: f64) -
         let indices = &m.mesh.indices; //points index (maybe joint)
         let mut points = Vec::new();
         let mut triangles = HittableList::new();
-
+        // if positions.len() < 50 {
+        //     continue;
+        // }
         for i in (0..positions.len()).step_by(3) {
             points.push(Point3::new(positions[i], positions[i + 1], positions[i + 2]) * scale);
         }
@@ -28,5 +30,11 @@ pub fn load<M: Material + Clone + 'static>(pathname: &str, mat: M, scale: f64) -
         }
         objects.add(Box::new(BVHNode::new(triangles, 0., 1.)));
     }
-    objects
+    if objects.size() >= 6 {
+        let mut obs = HittableList::new();
+        obs.add(Box::new(BVHNode::new(objects, 0., 1.)));
+        obs
+    } else {
+        objects
+    }
 }
