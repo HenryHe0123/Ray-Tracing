@@ -7,12 +7,11 @@ pub mod scene;
 pub mod texture;
 pub mod utility;
 
-use crate::camera::Camera;
 use crate::hittable::aarect::XZRect;
 use crate::hittable::*;
 use crate::material::*;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
-use crate::scene::*;
+use crate::scene::my_scene::*;
 use crate::utility::random_double;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
@@ -27,7 +26,7 @@ use std::{fs::File, process::exit, thread};
 const MAX_LEN: usize = 1000;
 
 fn main() {
-    let path = std::path::Path::new("output/works/golden-cow.jpg");
+    let path = std::path::Path::new("output/works/test/texture-mapping.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -37,14 +36,15 @@ fn main() {
     //Image
     let aspect_ratio = 1.0;
     let width: usize = 600;
-    let samples_per_pixel: u32 = 50;
+    let samples_per_pixel: u32 = 100;
     let max_bounce_depth: i32 = 50;
+    let height = (width as f64 / aspect_ratio) as usize;
 
     let edge_detect: bool = false;
     let edge_detect_level = 128.0; //high: 64, low: 128
 
     //World
-    let world = golden_cow_in_cornell_box();
+    let (world, camera) = obj_in_cornell_box();
     let background = Color::black();
 
     //Lights
@@ -65,27 +65,8 @@ fn main() {
     //     DEFAULT_MATERIAL,
     // )));
 
-    //Camera
-    let lookfrom = Point3::new(278.0, 278.0, -800.0);
-    let lookat = Point3::new(278.0, 278.0, 0.0);
-    let vfov = 40.0;
-    let aperture = 0.0;
-
-    let height = (width as f64 / aspect_ratio) as usize;
-    let vup = Vec3::new(0.0, 1.0, 0.0);
-    let dist_to_focus = 10.0;
     let time0 = 0.0;
     let time1 = 1.0;
-
-    let camera = Camera::new(
-        &lookfrom,
-        &lookat,
-        &vup,
-        vfov,
-        aspect_ratio,
-        aperture,
-        dist_to_focus,
-    );
 
     //Render
     let quality = 100;

@@ -5,8 +5,9 @@ pub mod mybox;
 pub mod sphere;
 pub mod triangle;
 
+use crate::hittable::aarect::*;
 use crate::hittable::bvh::aabb::{surrounding_box, AABB};
-use crate::material::{Material, DEFAULT_MATERIAL};
+use crate::material::*;
 use crate::utility::random_int_range;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
@@ -88,6 +89,30 @@ impl HittableList {
 
     pub fn size(&self) -> usize {
         self.objects.len()
+    }
+
+    pub fn standard_cornell_box() -> Self {
+        let mut objects = HittableList::default();
+        let red = Lambertian::new_from_color(&Color::new(0.65, 0.05, 0.05));
+        let white = Lambertian::new_from_color(&Color::new(0.73, 0.73, 0.73));
+        let green = Lambertian::new_from_color(&Color::new(0.12, 0.45, 0.15));
+        let light = DiffuseLight::new_from_color(&Color::new(15.0, 15.0, 15.0));
+        objects.add(Box::new(YZRect::new(0., 555., 0., 555., 555., green)));
+        objects.add(Box::new(YZRect::new(0., 555., 0., 555., 0., red)));
+        objects.add(Box::new(FlipFace::new(XZRect::new(
+            213., 343., 227., 332., 554., light,
+        ))));
+        objects.add(Box::new(XZRect::new(0., 555., 0., 555., 0., white.clone())));
+        objects.add(Box::new(XZRect::new(
+            0.,
+            555.,
+            0.,
+            555.,
+            555.,
+            white.clone(),
+        )));
+        objects.add(Box::new(XYRect::new(0., 555., 0., 555., 555., white)));
+        objects
     }
 }
 

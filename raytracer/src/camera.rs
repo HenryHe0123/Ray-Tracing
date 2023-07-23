@@ -59,4 +59,23 @@ impl Camera {
         let dir = self.lower_left_corner + s * self.horizontal + t * self.vertical - orig;
         Ray::new(&orig, &dir, random_double_range(time0, time1))
     }
+
+    pub fn default_cornell_box() -> Self {
+        let aspect_ratio = 1.0;
+        let lookfrom = Point3::new(278.0, 278.0, -800.0);
+        let lookat = Point3::new(278.0, 278.0, 0.0);
+        let vfov = 40.0;
+        let aperture = 0.0;
+        let vup = Vec3::new(0.0, 1.0, 0.0);
+        let dist_to_focus = 10.0;
+        Self::new(
+            &lookfrom,
+            &lookat,
+            &vup,
+            vfov,
+            aspect_ratio,
+            aperture,
+            dist_to_focus,
+        )
+    }
 }

@@ -12,10 +12,10 @@
 
 - [x] Track 4: PDF Static Dispatch
 
-- [ ] Track 5: More Code Generation
-
 - [x] Track 6: Advanced Features: support PDF for Transform
 
 #### CG-Bonus
 
 - [x] Edge detection
+
+- [x] Texture mapping

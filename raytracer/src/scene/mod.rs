@@ -1,3 +1,5 @@
+pub mod my_scene;
+
 use crate::hittable::aarect::*;
 use crate::hittable::bvh::BVHNode;
 use crate::hittable::constant_medium::*;
@@ -377,6 +379,8 @@ pub fn final_scene() -> HittableList {
     objects
 }
 
+//-----------------------------------my test work------------------------------------------------
+
 pub fn golden_cow_in_cornell_box() -> HittableList {
     let mut objects = HittableList::default();
     let red = Lambertian::new_from_color(&Color::new(0.65, 0.05, 0.05));
@@ -413,7 +417,7 @@ pub fn golden_cow_in_cornell_box() -> HittableList {
     objects
 }
 
-pub fn obj_in_cornell_box() -> HittableList {
+pub fn car_in_cornell_box() -> HittableList {
     let mut objects = HittableList::default();
     let red = Lambertian::new_from_color(&Color::new(0.65, 0.05, 0.05));
     let white = Lambertian::new_from_color(&Color::new(0.73, 0.73, 0.73));

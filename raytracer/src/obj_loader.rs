@@ -12,6 +12,8 @@ pub fn load<M: Material + Clone + 'static>(pathname: &str, mat: M, scale: f64) -
     for m in models {
         let positions = &m.mesh.positions; //points position
         let indices = &m.mesh.indices; //points index (maybe joint)
+        let texcoords = &m.mesh.texcoords;
+        let texcoord_indices = &m.mesh.texcoord_indices;
         let mut points = Vec::new();
         let mut triangles = HittableList::new();
         // if positions.len() < 50 {
@@ -21,11 +23,21 @@ pub fn load<M: Material + Clone + 'static>(pathname: &str, mat: M, scale: f64) -
             points.push(Point3::new(positions[i], positions[i + 1], positions[i + 2]) * scale);
         }
         for i in (0..indices.len() - indices.len() % 3).step_by(3) {
+            let mut uv = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0)];
+            if !texcoords.is_empty() {
+                for j in 0..3 {
+                    let index = texcoord_indices[i + j] as usize;
+                    uv[j] = (texcoords[index << 1], texcoords[index << 1 | 1]);
+                }
+            }
             triangles.add(Box::new(Triangle::new(
                 &points[indices[i] as usize],
                 &points[indices[i + 1] as usize],
                 &points[indices[i + 2] as usize],
                 mat.clone(),
+                uv[0],
+                uv[1],
+                uv[2],
             )));
         }
         objects.add(Box::new(BVHNode::new(triangles, 0., 1.)));

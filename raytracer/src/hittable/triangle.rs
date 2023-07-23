@@ -15,10 +15,22 @@ pub struct Triangle<M: Material> {
     //pc perpendicular to ac with length of ac/2*area
     pub bbox: AABB,
     pub mat: M,
+    pub uva: (f64, f64),
+    pub uvab: (f64, f64),
+    pub uvac: (f64, f64),
+    //texture coordinate
 }
 
 impl<M: Material> Triangle<M> {
-    pub fn new(a: &Point3, b: &Point3, c: &Point3, mat: M) -> Self {
+    pub fn new(
+        a: &Point3,
+        b: &Point3,
+        c: &Point3,
+        mat: M,
+        (ua, va): (f64, f64),
+        (ub, vb): (f64, f64),
+        (uc, vc): (f64, f64),
+    ) -> Self {
         let ab = *b - *a;
         let ac = *c - *a;
         let normal = cross(&ab, &ac);
@@ -37,6 +49,9 @@ impl<M: Material> Triangle<M> {
             pc: cross(&ac, &n) / area2,
             mat,
             bbox: AABB::new(&min, &max),
+            uva: (ua, va),
+            uvab: (ub - ua, vb - va),
+            uvac: (uc - ua, vc - va),
         }
     }
 
@@ -56,6 +71,13 @@ impl<M: Material> Triangle<M> {
             panic!("triangle get edges error")
         }
     }
+
+    pub fn uv_coordinate(&self, u: f64, v: f64) -> (f64, f64) {
+        (
+            self.uva.0 + u * self.uvab.0 + v * self.uvac.0,
+            self.uva.1 + u * self.uvab.1 + v * self.uvac.1,
+        )
+    }
 }
 
 impl<M: Material> Hittable for Triangle<M> {
@@ -71,12 +93,13 @@ impl<M: Material> Hittable for Triangle<M> {
         let v = dot(&ap, &self.pb);
         // AP = uAB + vAC
         if u >= 0. && v >= 0. && u + v <= 1. {
+            let (x, y) = self.uv_coordinate(u, v);
             let rec = HitRecord {
                 p,
                 normal: self.n,
                 t,
-                u,
-                v,
+                u: x,
+                v: y,
                 front_face: true, //set it true if you want to emit light!!!
                 mat_ptr: &self.mat,
             };
