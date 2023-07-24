@@ -11,8 +11,16 @@ pub fn load_naive<M: Material + Clone + 'static>(
     mat: M,
     scale: f64,
 ) -> HittableList {
-    let (models, _) =
-        load_obj(pathname, &LoadOptions::default()).expect("Failed to load .obj file.");
+    let (models, _) = load_obj(
+        pathname,
+        &LoadOptions {
+            single_index: false,
+            triangulate: true,
+            ignore_points: true,
+            ignore_lines: true,
+        },
+    )
+    .expect("Failed to load .obj file.");
     let mut objects = HittableList::new();
     for m in models {
         let positions = &m.mesh.positions; //points position
@@ -21,9 +29,6 @@ pub fn load_naive<M: Material + Clone + 'static>(
         let texcoord_indices = &m.mesh.texcoord_indices;
         let mut points = Vec::new();
         let mut triangles = HittableList::new();
-        // if positions.len() < 50 {
-        //     continue;
-        // }
         for i in (0..positions.len()).step_by(3) {
             points.push(Point3::new(positions[i], positions[i + 1], positions[i + 2]) * scale);
         }
@@ -60,8 +65,16 @@ pub fn load_pro(project_name: &str, scale: f64, default_color: &Color) -> Hittab
     // must have a .mtl file
     let path_prefix = format!("objects/{}/", project_name);
     let pathname = format!("{}{}.obj", path_prefix, project_name);
-    let (models, materials) =
-        load_obj(pathname, &LoadOptions::default()).expect("Failed to load OBJ file.");
+    let (models, materials) = load_obj(
+        pathname,
+        &LoadOptions {
+            single_index: false,
+            triangulate: true,
+            ignore_points: true,
+            ignore_lines: true,
+        },
+    )
+    .expect("Failed to load OBJ file.");
 
     // read mtl texture
     let materials = materials.expect("Failed to load MTL file");
