@@ -7,7 +7,7 @@ use crate::hittable::mybox::*;
 use crate::hittable::sphere::*;
 use crate::hittable::{FlipFace, HittableList, RotateY, Translate};
 use crate::material::{Dielectric, DiffuseLight, Lambertian, Metal};
-use crate::obj_loader::load;
+use crate::obj_loader::*;
 use crate::texture::*;
 use crate::utility::vec3::*;
 use crate::utility::*;
@@ -410,7 +410,7 @@ pub fn golden_cow_in_cornell_box() -> HittableList {
         -90000., 90000., -90000., 90000., -4000., light,
     )));
 
-    let cow = load("objects/spot_triangulated_good.obj", Metal::gold(), 200.0);
+    let cow = load_naive("objects/spot_triangulated_good.obj", Metal::gold(), 200.0);
 
     objects.add(Box::new(Translate::new(cow, &Vec3::new(278., 144., 178.))));
 
@@ -446,7 +446,7 @@ pub fn car_in_cornell_box() -> HittableList {
         -90000., 90000., -90000., 90000., -4000., light,
     )));
 
-    let obj = load("objects/car.obj", Metal::gold(), 120.0);
+    let obj = load_naive("objects/car.obj", Metal::gold(), 120.0);
 
     objects.add(Box::new(Translate::new(
         RotateY::new(obj, 180.0),

@@ -26,7 +26,7 @@ use std::{fs::File, process::exit, thread};
 const MAX_LEN: usize = 1000;
 
 fn main() {
-    let path = std::path::Path::new("output/works/test/texture-mapping.jpg");
+    let path = std::path::Path::new("output/works/test/rocket.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -36,7 +36,7 @@ fn main() {
     //Image
     let aspect_ratio = 1.0;
     let width: usize = 600;
-    let samples_per_pixel: u32 = 100;
+    let samples_per_pixel: u32 = 200;
     let max_bounce_depth: i32 = 50;
     let height = (width as f64 / aspect_ratio) as usize;
 

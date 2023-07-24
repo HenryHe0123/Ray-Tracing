@@ -333,6 +333,102 @@ impl<H: Hittable> RotateY<H> {
 }
 
 #[derive(Clone, Default)]
+pub struct RotateX<H: Hittable> {
+    pub ptr: H,
+    pub sin_theta: f64,
+    pub cos_theta: f64,
+    pub hasbox: bool,
+    pub bbox: AABB,
+}
+
+impl<H: Hittable> Hittable for RotateX<H> {
+    fn hit(&self, r: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let mut origin = r.origin();
+        let mut direction = r.direction();
+
+        origin[1] = self.cos_theta * r.origin()[1] + self.sin_theta * r.origin()[2];
+        origin[2] = -self.sin_theta * r.origin()[1] + self.cos_theta * r.origin()[2];
+
+        direction[1] = self.cos_theta * r.direction()[1] + self.sin_theta * r.direction()[2];
+        direction[2] = -self.sin_theta * r.direction()[1] + self.cos_theta * r.direction()[2];
+
+        let rotated_r = Ray::new(&origin, &direction, r.time());
+
+        if let Some(mut rec) = self.ptr.hit(&rotated_r, t_min, t_max) {
+            let mut p = rec.p;
+            let mut normal = rec.normal;
+
+            p[1] = self.cos_theta * rec.p[1] - self.sin_theta * rec.p[2];
+            p[2] = self.sin_theta * rec.p[1] + self.cos_theta * rec.p[2];
+
+            normal[1] = self.cos_theta * rec.normal[1] - self.sin_theta * rec.normal[2];
+            normal[2] = self.sin_theta * rec.normal[1] + self.cos_theta * rec.normal[2];
+
+            rec.p = p;
+            rec.normal = normal;
+            return Some(rec);
+        }
+
+        None
+    }
+
+    fn bounding_box(&self, _time0: f64, _time1: f64, output_box: &mut AABB) -> bool {
+        *output_box = self.bbox;
+        self.hasbox
+    }
+
+    fn pdf_value(&self, o: &Point3, v: &Vec3) -> f64 {
+        let rotated_o = rotate_vec_x(o, self.sin_theta, self.cos_theta);
+        let rotated_v = rotate_vec_x(v, self.sin_theta, self.cos_theta);
+        self.ptr.pdf_value(&rotated_o, &rotated_v)
+    }
+
+    fn random(&self, o: &Vec3) -> Vec3 {
+        let rotated_o = rotate_vec_x(o, self.sin_theta, self.cos_theta);
+        let rotated_rand = self.ptr.random(&rotated_o);
+        rotate_vec_x(&rotated_rand, -self.sin_theta, self.cos_theta)
+    }
+}
+
+impl<H: Hittable> RotateX<H> {
+    pub fn new(p: H, angle: f64) -> Self {
+        let radians = angle.to_radians();
+        let sin_theta = radians.sin();
+        let cos_theta = radians.cos();
+        let mut bbox = AABB::default();
+        let hasbox = p.bounding_box(0.0, 1.0, &mut bbox);
+        let mut min = Point3::new(INFINITY, INFINITY, INFINITY);
+        let mut max = Point3::new(-INFINITY, -INFINITY, -INFINITY);
+        for i in 0..2 {
+            for j in 0..2 {
+                for k in 0..2 {
+                    let i = i as f64;
+                    let j = j as f64;
+                    let k = k as f64;
+                    let x = i * bbox.max().x() + (1.0 - i) * bbox.min().x();
+                    let y = j * bbox.max().y() + (1.0 - j) * bbox.min().y();
+                    let z = k * bbox.max().z() + (1.0 - k) * bbox.min().z();
+                    let pre = Vec3::new(x, y, z);
+                    let tester = rotate_vec_x(&pre, -sin_theta, cos_theta);
+                    for c in 0..3 {
+                        min[c] = tester[c].min(min[c]);
+                        max[c] = tester[c].max(max[c]);
+                    }
+                }
+            }
+        }
+        bbox = AABB::new(&min, &max);
+        Self {
+            ptr: p,
+            sin_theta,
+            cos_theta,
+            hasbox,
+            bbox,
+        }
+    }
+}
+
+#[derive(Clone, Default)]
 pub struct FlipFace<H: Hittable> {
     pub ptr: H,
 }
@@ -369,4 +465,8 @@ impl<H: Hittable> Hittable for FlipFace<H> {
 
 fn rotate_vec_y(v: &Vec3, sin: f64, cos: f64) -> Vec3 {
     Vec3::new(cos * v.x() - sin * v.z(), v.y(), sin * v.x() + cos * v.z())
+}
+
+fn rotate_vec_x(v: &Vec3, sin: f64, cos: f64) -> Vec3 {
+    Vec3::new(v.x(), cos * v.y() + sin * v.z(), -sin * v.y() + cos * v.z())
 }

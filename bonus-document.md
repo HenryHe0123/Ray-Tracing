@@ -1,7 +1,7 @@
 ## Bonus Document
 
 - [x] Multi-threads
-- [x] Support for `.obj` file 
+- [x] Support for `.obj` file and `.mtl` file
 
 #### Rust-Bonus
 

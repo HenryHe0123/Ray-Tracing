@@ -4,6 +4,7 @@ use crate::texture::perlin::Perlin;
 use crate::utility::clamp;
 use crate::utility::vec3::*;
 use image::GenericImageView;
+use std::sync::Arc;
 
 pub trait Texture: Send + Sync {
     fn value(&self, u: f64, v: f64, p: &Point3) -> Color;
@@ -89,9 +90,9 @@ impl NoiseTexture {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct ImageTexture {
-    data: Vec<u8>,
+    data: Arc<Vec<u8>>,
     width: u32,
     height: u32,
     bytes_per_scanline: u32,
@@ -105,10 +106,25 @@ impl ImageTexture {
         let data = img.to_rgb8().into_vec();
         let (width, height) = img.dimensions();
         Self {
-            data,
+            data: Arc::new(data),
             width,
             height,
             bytes_per_scanline: ImageTexture::BYTES_PER_PIXEL * width,
+        }
+    }
+
+    pub fn empty(&self) -> bool {
+        self.data.is_empty()
+    }
+}
+
+impl Default for ImageTexture {
+    fn default() -> Self {
+        Self {
+            data: Arc::new(Vec::new()),
+            width: 0,
+            height: 0,
+            bytes_per_scanline: 0,
         }
     }
 }
