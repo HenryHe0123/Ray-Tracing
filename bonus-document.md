@@ -21,8 +21,8 @@
 
 #### Final Scene (naval maneuvers)
 
-![final-work](output\works\final-work.jpg)
+![final-work](output/works/final-work.jpg)
 
 #### Final Scene with edge detection
 
-![final-work-ed](output\works\final-work-edge-detect.jpg)
+![final-work-ed](output/works/final-work-edge-detect.jpg)
