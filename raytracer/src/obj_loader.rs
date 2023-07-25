@@ -4,6 +4,7 @@ use crate::hittable::HittableList;
 use crate::material::*;
 use crate::texture::ImageTexture;
 use crate::utility::vec3::*;
+use crate::{TIME0, TIME1};
 use tobj::{load_obj, LoadOptions};
 
 pub fn load_naive<M: Material + Clone + 'static>(
@@ -50,18 +51,16 @@ pub fn load_naive<M: Material + Clone + 'static>(
                 uv[2],
             )));
         }
-        objects.add(Box::new(BVHNode::new(triangles, 0., 1.)));
+        objects.add(Box::new(BVHNode::new(triangles, TIME0, TIME1)));
     }
     if objects.size() >= 6 {
-        let mut obs = HittableList::new();
-        obs.add(Box::new(BVHNode::new(objects, 0., 1.)));
-        obs
+        HittableList::bvh(objects)
     } else {
         objects
     }
 }
 
-pub fn load_pro(project_name: &str, scale: f64, default_color: &Color) -> HittableList {
+pub fn load_pro(project_name: &str, scale: Vec3, default_color: &Color) -> HittableList {
     // must have a .mtl file
     let path_prefix = format!("objects/{}/", project_name);
     let pathname = format!("{}{}.obj", path_prefix, project_name);
@@ -136,13 +135,15 @@ pub fn load_pro(project_name: &str, scale: f64, default_color: &Color) -> Hittab
                 )));
             }
         }
-        objects.add(Box::new(BVHNode::new(triangles, 0., 1.)));
+        objects.add(Box::new(BVHNode::new(triangles, TIME0, TIME1)));
     }
     if objects.size() >= 6 {
-        let mut obs = HittableList::new();
-        obs.add(Box::new(BVHNode::new(objects, 0., 1.)));
-        obs
+        HittableList::bvh(objects)
     } else {
         objects
     }
+}
+
+pub fn su27() -> HittableList {
+    load_pro("SU-27", Vec3::same(1.5), &Color::black())
 }

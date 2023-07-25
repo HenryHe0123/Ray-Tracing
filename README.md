@@ -153,7 +153,7 @@ Just do some preparation work, including:
   - Read interesting books(e.g. 《Unity Shader 入门精要》) and implement other fancy features
 - Exploring some [Rust features](./doc/rust-bonus.md)
 - Some other interesting features. Please contact TAs if you have any ideas
-- You can refer to [artworks in raytracer-2022](./doc/artworks-2022.md)
+- You can refer to [artworks in raytracer-2022](https://github.com/ACMClassCourse-2022/Summer-Ray-Tracer/blob/master/doc/artworks-2022.md)
 
 #### Task 5 (10 pts): Final scene
 

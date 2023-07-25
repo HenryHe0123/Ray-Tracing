@@ -11,6 +11,7 @@ use crate::obj_loader::*;
 use crate::texture::*;
 use crate::utility::vec3::*;
 use crate::utility::*;
+use crate::{TIME0, TIME1};
 use raytracer_codegen::impl_static_final_scene;
 
 impl_static_final_scene!();
@@ -91,7 +92,7 @@ pub fn random_scene() -> HittableList {
     //     DiffuseLight::new_from_color(&Color::new(7.0, 7.0, 7.0)),
     // )));
     //
-    world.add(Box::new(BVHNode::new(list, 0.0, 1.0)));
+    world.add(Box::new(BVHNode::new(list, TIME0, TIME1)));
     world
 }
 
@@ -298,7 +299,7 @@ pub fn final_scene() -> HittableList {
         }
     }
     let mut objects = HittableList::default();
-    objects.add(Box::new(BVHNode::new(boxes1, 0.0, 1.0)));
+    objects.add(Box::new(BVHNode::new(boxes1, TIME0, TIME1)));
 
     let light = DiffuseLight::new_from_color(&Color::new(7.0, 7.0, 7.0));
     objects.add(Box::new(FlipFace::new(XZRect::new(
@@ -370,7 +371,7 @@ pub fn final_scene() -> HittableList {
         )));
     }
 
-    let bvh_ptr = BVHNode::new(boxes2, 0.0, 1.0);
+    let bvh_ptr = BVHNode::new(boxes2, TIME0, TIME1);
     objects.add(Box::new(Translate::new(
         RotateY::new(bvh_ptr, 15.0),
         &Vec3::new(-100., 270., 395.),

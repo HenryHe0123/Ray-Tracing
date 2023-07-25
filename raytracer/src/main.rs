@@ -7,7 +7,6 @@ pub mod scene;
 pub mod texture;
 pub mod utility;
 
-use crate::hittable::aarect::XZRect;
 use crate::hittable::*;
 use crate::material::*;
 use crate::pdf::{HittablePDF, MixturePDF, PDF};
@@ -23,10 +22,12 @@ use std::f64::INFINITY;
 use std::sync::{mpsc, Arc};
 use std::{fs::File, process::exit, thread};
 
-const MAX_LEN: usize = 1000;
+const MAX_LEN: usize = 4000;
+const TIME0: f64 = 0.0;
+const TIME1: f64 = 1.0;
 
 fn main() {
-    let path = std::path::Path::new("output/works/test/rocket.jpg");
+    let path = std::path::Path::new("output/works/final-work-edge-detect.jpg");
     let prefix = path.parent().unwrap();
     std::fs::create_dir_all(prefix).expect("Cannot create all the parents");
 
@@ -34,39 +35,21 @@ fn main() {
     let shuffle: bool = true;
 
     //Image
-    let aspect_ratio = 1.0;
-    let width: usize = 600;
-    let samples_per_pixel: u32 = 200;
+    let aspect_ratio = 16.0 / 9.0;
+    let width: usize = 3840;
+    let samples_per_pixel: u32 = 100;
     let max_bounce_depth: i32 = 50;
     let height = (width as f64 / aspect_ratio) as usize;
 
-    let edge_detect: bool = false;
-    let edge_detect_level = 128.0; //high: 64, low: 128
+    let edge_detect: bool = true;
+    let edge_detect_level = 72.0; //high: 64, low: 128
 
     //World
-    let (world, camera) = obj_in_cornell_box();
-    let background = Color::black();
+    let (world, camera) = final_work();
+    let background = Color::new(0.5, 0.7, 1.0) * 0.8;
 
     //Lights
-    let lights = XZRect::new(123., 423., 147., 412., 554., DEFAULT_MATERIAL);
-    //let lights = HittableList::default();
-    // lights.add(Box::new(XZRect::new(
-    //     123.,
-    //     423.,
-    //     147.,
-    //     412.,
-    //     554.,
-    //     DEFAULT_MATERIAL,
-    // )));
-    // lights.add(Box::new(Triangle::new(
-    //     &Point3::new(200.0, 402.0, 200.),
-    //     &Point3::new(200.0, 402.0, 300.),
-    //     &Point3::new(300.0, 402.0, 250.),
-    //     DEFAULT_MATERIAL,
-    // )));
-
-    let time0 = 0.0;
-    let time1 = 1.0;
+    let lights = HittableList::default();
 
     //Render
     let quality = 100;
@@ -105,7 +88,7 @@ fn main() {
                     let u = ((pixel.0 as f64) + random_double()) / ((width - 1) as f64);
                     let v =
                         (((height - pixel.1 - 1) as f64) + random_double()) / ((height - 1) as f64);
-                    let r = camera.get_ray(u, v, time0, time1);
+                    let r = camera.get_ray(u, v, TIME0, TIME1);
                     pixel_color += ray_color(
                         &r,
                         &background,

@@ -17,5 +17,12 @@
 #### CG-Bonus
 
 - [x] Edge detection
-
 - [x] Texture mapping
+
+#### Final Scene (naval maneuvers)
+
+![final-work](output\works\final-work.jpg)
+
+#### Final Scene with edge detection
+
+![final-work-ed](output\works\final-work-edge-detect.jpg)

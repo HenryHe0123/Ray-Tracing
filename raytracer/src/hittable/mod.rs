@@ -7,10 +7,12 @@ pub mod triangle;
 
 use crate::hittable::aarect::*;
 use crate::hittable::bvh::aabb::{surrounding_box, AABB};
+use crate::hittable::bvh::BVHNode;
 use crate::material::*;
 use crate::utility::random_int_range;
 use crate::utility::ray::Ray;
 use crate::utility::vec3::*;
+use crate::{TIME0, TIME1};
 use std::f64::consts::PI;
 use std::f64::INFINITY;
 
@@ -77,6 +79,12 @@ impl HittableList {
         HittableList {
             objects: Vec::new(),
         }
+    }
+
+    pub fn bvh(objects: HittableList) -> Self {
+        let mut world = Self::new();
+        world.add(Box::new(BVHNode::new(objects, TIME0, TIME1)));
+        world
     }
 
     pub fn clear(&mut self) {

@@ -177,6 +177,10 @@ impl Vec3 {
             e: [0.753, 0.753, 0.753],
         }
     }
+
+    pub fn same(f: f64) -> Self {
+        Self { e: [f; 3] }
+    }
 }
 
 impl Index<usize> for Vec3 {

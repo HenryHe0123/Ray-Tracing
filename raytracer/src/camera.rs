@@ -78,4 +78,21 @@ impl Camera {
             dist_to_focus,
         )
     }
+
+    pub fn for_final(lookfrom: &Point3, lookat: &Point3) -> Self {
+        let aspect_ratio = 16.0 / 9.0;
+        let vfov = 40.0;
+        let aperture = 0.0;
+        let vup = Vec3::new(0.0, 1.0, 0.0);
+        let dist_to_focus = 10.0;
+        Self::new(
+            lookfrom,
+            lookat,
+            &vup,
+            vfov,
+            aspect_ratio,
+            aperture,
+            dist_to_focus,
+        )
+    }
 }

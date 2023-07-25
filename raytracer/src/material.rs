@@ -87,14 +87,14 @@ impl Metal {
     pub fn gold() -> Self {
         Self {
             albedo: Color::gold(),
-            fuzz: 0.1,
+            fuzz: 0.2,
         }
     }
 
     pub fn silver() -> Self {
         Self {
             albedo: Color::silver(),
-            fuzz: 0.1,
+            fuzz: 0.2,
         }
     }
 }
