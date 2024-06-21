@@ -6,6 +6,8 @@
 
 **Before you start, please read this README carefully**, and there is no useless information in this document.
 
+Note: The project has been completed. You can see more about the work I have done [here](bonus-document.md).
+
 ### Introduction
 
 Briefly, you need to build a toy ray tracer in this project with the Rust language.
